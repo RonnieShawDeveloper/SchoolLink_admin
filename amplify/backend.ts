@@ -24,6 +24,7 @@ const api = defineRestApi({
   routes: [
     { path: '/students/search', method: 'GET', function: studentSearchFn },
     { path: '/students/by-institution', method: 'GET', function: studentSearchFn },
+    { path: '/students/update', method: 'POST', function: studentSearchFn },
   ],
   authorizationType: 'NONE',
 });

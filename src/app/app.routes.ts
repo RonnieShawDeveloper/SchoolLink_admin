@@ -8,6 +8,8 @@ import { ClassesListComponent } from './features/classes/classes-list/classes-li
 import { ClassDetailComponent } from './features/classes/class-detail/class-detail.component';
 import { ReportsHomeComponent } from './features/reports/reports-home/reports-home.component';
 import { authGuard } from './core/guards/auth.guard';
+import { AdminShellComponent } from './features/admin/admin-shell.component';
+import { AdminStudentEditorComponent } from './features/admin/student-editor/student-editor.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -22,6 +24,14 @@ export const routes: Routes = [
       { path: 'classes', component: ClassesListComponent },
       { path: 'classes/:id', component: ClassDetailComponent },
       { path: 'reports', component: ReportsHomeComponent },
+      {
+        path: 'admin',
+        component: AdminShellComponent,
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'students' },
+          { path: 'students', component: AdminStudentEditorComponent },
+        ]
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

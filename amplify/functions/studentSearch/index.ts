@@ -15,8 +15,6 @@ function getPoolCfg(): mysql.PoolOptions & { database: string } {
     queueLimit: 0,
   };
   if ((process.env.DB_SSL || 'true') === 'true') {
-    // RDS public endpoints use certificates trusted by Node's default CAs.
-    // Enforce TLS with certificate verification.
     cfg.ssl = { rejectUnauthorized: true };
   }
   return cfg;
@@ -33,26 +31,26 @@ function parsePaging(limitStr?: string, pageStr?: string) {
   return { limit, page, offset: (page - 1) * limit };
 }
 
-function isSearchRoute(path: string) {
-  return path.endsWith('/students/search');
-}
-
-function isInstitutionRoute(path: string) {
-  return path.endsWith('/students/by-institution');
-}
+function isSearchRoute(path: string) { return path.endsWith('/students/search'); }
+function isInstitutionRoute(path: string) { return path.endsWith('/students/by-institution'); }
+function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
   try {
+    const method = (event.requestContext?.http?.method || event.httpMethod || 'GET').toUpperCase();
+    if (method === 'OPTIONS') {
+      return resp(204, {});
+    }
+
     const route = (event.requestContext?.http?.path || event.path || '').toLowerCase();
     const qs = event.queryStringParameters || {};
     const q = (qs.q || '').trim();
     const { limit, page, offset } = parsePaging(qs.limit, qs.page);
 
-    if (!q) return resp(400, { message: 'q is required' });
-
     const pool = await getPool();
 
     if (isSearchRoute(route)) {
+      if (!q) return resp(400, { message: 'q is required' });
       // Try exact StudentOpenEMIS_ID first
       const [byIdRows] = await pool.query('SELECT * FROM StudentData WHERE StudentOpenEMIS_ID = ? LIMIT 1', [q]);
       const byId = byIdRows as any[];
@@ -77,7 +75,7 @@ export const handler = async (event: any) => {
     }
 
     if (isInstitutionRoute(route)) {
-      if (q.length < 3) return resp(400, { message: 'q must be at least 3 characters' });
+      if (!q || q.length < 3) return resp(400, { message: 'q must be at least 3 characters' });
       const like = `%${q}%`;
 
       const [cntRows]: any = await pool.query('SELECT COUNT(*) c FROM StudentData WHERE InstitutionName LIKE ?', [like]);
@@ -88,6 +86,62 @@ export const handler = async (event: any) => {
         [like, limit, offset]
       );
       return resp(200, { items: rows, total, page, totalPages: Math.ceil(total / limit) });
+    }
+
+    if (isUpdateRoute(route)) {
+      if (method !== 'POST') return resp(405, { message: 'Method not allowed' });
+      const bodyRaw = event.body || '{}';
+      const payload = typeof bodyRaw === 'string' ? JSON.parse(bodyRaw) : bodyRaw;
+
+      // Allowed columns based on StudentData schema
+      const allowed = [
+        'InstitutionCode','InstitutionName','Ownewship','Type','Sector','Provider','Locality','AreaEducationCode','AreaEducation','AreaAdministrativeCode','AreaAdministrative',
+        'EducationGrade','AcademicPeriod','StartDate','EndDate','ClassName','LastGradeLevelEnrolled','PreviousSchool',
+        'StudentOpenEMIS_ID','StudentName','StudentStatus','Gender','DateOfBirth','Age','PreferredNationality','AllNationalities','DefaultIdentitytype','IdentityNumber','RiskIndex','ExtraActivities','Address','NIB2',
+        'MotherOpenEMIS_ID','MotherName','MotherContact','MotherFirstName','MotherLastName','MotherAddress','MotherTelephone','MotherEmail','MotherDOB','MotherIsDeceased','MotherNationality',
+        'FatherOpenEMIS_ID','FatherName','FatherContact','FatherFirstName','FatherLastName','FatherAddress','FatherTelephone','FatherEmail','FatherDOB','FatherIsDeceased','FatherNationality',
+        'GuardianOpenEMIS_ID','GuardianName','GuardianGender','GuardianDateOfBirth','GuardianFirstName','GuardianLastName','GuardianAddress','GuardianTelephone','GuardianEmail','GuardianDOB','GuardianIsDeceased','GuardianNationality',
+        'Studentlivingwith','StudentLivingWithGuardian'
+      ];
+
+      const updates: string[] = [];
+      const values: any[] = [];
+      for (const k of allowed) {
+        if (k in payload) {
+          updates.push(`${k} = ?`);
+          values.push(payload[k]);
+        }
+      }
+
+      if (payload.StudentID) {
+        const sql = `UPDATE StudentData SET ${updates.join(', ')} WHERE StudentID = ?`;
+        values.push(payload.StudentID);
+        const [res]: any = await pool.query(sql, values);
+        return resp(200, { status: 'updated', affectedRows: res.affectedRows, StudentID: payload.StudentID });
+      } else if (payload.StudentOpenEMIS_ID) {
+        const [rows]: any = await pool.query('SELECT StudentID FROM StudentData WHERE StudentOpenEMIS_ID = ? LIMIT 1', [payload.StudentOpenEMIS_ID]);
+        if (rows.length) {
+          const sid = rows[0].StudentID;
+          const sql = `UPDATE StudentData SET ${updates.join(', ')} WHERE StudentID = ?`;
+          const vals = [...values, sid];
+          const [res]: any = await pool.query(sql, vals);
+          return resp(200, { status: 'updated', affectedRows: res.affectedRows, StudentID: sid });
+        } else {
+          // Insert
+          const cols: string[] = [];
+          const vals: any[] = [];
+          const qms: string[] = [];
+          for (const k of allowed) {
+            if (k in payload) { cols.push(k); vals.push(payload[k]); qms.push('?'); }
+          }
+          if (cols.length === 0) return resp(400, { message: 'No fields provided to insert/update' });
+          const sql = `INSERT INTO StudentData (${cols.join(',')}) VALUES (${qms.join(',')})`;
+          const [res]: any = await pool.query(sql, vals);
+          return resp(200, { status: 'inserted', insertId: res.insertId });
+        }
+      } else {
+        return resp(400, { message: 'StudentID or StudentOpenEMIS_ID is required' });
+      }
     }
 
     return resp(404, { message: 'Route not found' });
@@ -103,8 +157,9 @@ function resp(statusCode: number, body: any) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,OPTIONS',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization'
     },
-    body: JSON.stringify(body),
+    body: statusCode === 204 ? '' : JSON.stringify(body),
   };
 }
