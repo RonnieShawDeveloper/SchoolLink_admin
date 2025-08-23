@@ -6,6 +6,10 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Configure the API base at runtime. In Amplify, set a custom header injection or edit this value during build. -->
+  <script>
+    window.STUDENT_API_BASE = window.STUDENT_API_BASE || '';
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -14,6 +14,7 @@ import { StudentRecord } from '../../core/models/student-data';
       <div style="display:flex; align-items:center; gap:12px;">
         <h2 style="margin:0;">Dashboard</h2>
         <span class="chip" title="Current local time">{{ now | date: 'EEE, MMM d, y • h:mm a' }}</span>
+        <a routerLink="/admin" class="btn-primary">Admin</a>
       </div>
 
       <!-- KPI Cards -->
