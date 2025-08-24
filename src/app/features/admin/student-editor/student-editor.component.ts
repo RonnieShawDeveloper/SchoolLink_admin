@@ -40,7 +40,7 @@ import { Subject, of } from 'rxjs';
                style="padding:8px; border-bottom:1px solid var(--bah-border); cursor:pointer; display:flex; justify-content:space-between;">
             <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               <div style="font-weight:600;">{{ s.StudentName || '—' }}</div>
-              <div style="font-size:0.85rem; color: var(--bah-text-muted);">DOB: {{ s.DateOfBirth || '—' }}</div>
+              <div style="font-size:0.85rem; color: var(--bah-text-muted);">DOB: {{ formatDateForDisplay(s.DateOfBirth) || '—' }}</div>
             </div>
             <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</div>
           </div>
@@ -285,6 +285,26 @@ export class AdminStudentEditorComponent {
   onSearch(ev: Event) {
     const val = (ev.target as HTMLInputElement).value.trim();
     this.search$.next(val);
+  }
+
+  formatDateForDisplay(dateValue: string | null | undefined): string {
+    if (!dateValue) return '';
+
+    // Handle ISO format (e.g., "2007-10-16T00:00:00.000Z")
+    if (dateValue.includes('T')) {
+      const [datePart] = dateValue.split('T');
+      const [year, month, day] = datePart.split('-');
+      return `${day}-${month}-${year}`;
+    }
+
+    // Handle YYYY-MM-DD format
+    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateValue.split('-');
+      return `${day}-${month}-${year}`;
+    }
+
+    // If already in DD-MM-YYYY format or unknown format, return as is
+    return dateValue;
   }
 
   select(s: StudentData) {
