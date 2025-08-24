@@ -15,7 +15,7 @@ function getPoolCfg(): mysql.PoolOptions & { database: string } {
     queueLimit: 0,
   };
   if ((process.env.DB_SSL || 'true') === 'true') {
-    cfg.ssl = { rejectUnauthorized: true };
+    cfg.ssl = { rejectUnauthorized: false };
   }
   return cfg;
 }
