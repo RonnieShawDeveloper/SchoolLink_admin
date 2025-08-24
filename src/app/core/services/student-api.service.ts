@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { StudentData } from '../models/student-data';
 
 export interface SearchResponse {
@@ -31,9 +31,55 @@ export interface AcademicUpdateData {
   EndDate: string;
 }
 
+export interface SelectedSchoolData {
+  InstitutionCode: string;
+  InstitutionName: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudentApiService {
   private readonly http = inject(HttpClient);
+  private readonly SELECTED_SCHOOL_KEY = 'schoollink_selected_school';
+  private selectedSchoolSubject = new BehaviorSubject<SelectedSchoolData | null>(null);
+
+  constructor() {
+    // Load saved school from localStorage on service initialization
+    this.loadSelectedSchoolFromStorage();
+  }
+
+  // Observable for components to subscribe to selected school changes
+  get selectedSchool$(): Observable<SelectedSchoolData | null> {
+    return this.selectedSchoolSubject.asObservable();
+  }
+
+  // Get current selected school synchronously
+  get selectedSchool(): SelectedSchoolData | null {
+    return this.selectedSchoolSubject.value;
+  }
+
+  // Set selected school and persist to localStorage
+  setSelectedSchool(school: SelectedSchoolData | null): void {
+    if (school) {
+      localStorage.setItem(this.SELECTED_SCHOOL_KEY, JSON.stringify(school));
+    } else {
+      localStorage.removeItem(this.SELECTED_SCHOOL_KEY);
+    }
+    this.selectedSchoolSubject.next(school);
+  }
+
+  // Load selected school from localStorage
+  private loadSelectedSchoolFromStorage(): void {
+    try {
+      const saved = localStorage.getItem(this.SELECTED_SCHOOL_KEY);
+      if (saved) {
+        const school = JSON.parse(saved) as SelectedSchoolData;
+        this.selectedSchoolSubject.next(school);
+      }
+    } catch (error) {
+      console.warn('Failed to load selected school from localStorage:', error);
+      localStorage.removeItem(this.SELECTED_SCHOOL_KEY);
+    }
+  }
 
   private baseUrl(): string {
     // Configure this at runtime by setting window.STUDENT_API_BASE in index.html or via hosting env.

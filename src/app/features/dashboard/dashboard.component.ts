@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { StudentsService } from '../../core/services/students.service';
 import { StudentRecord } from '../../core/models/student-data';
+import { StudentApiService, SchoolOption, SelectedSchoolData } from '../../core/services/student-api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,10 +12,38 @@ import { StudentRecord } from '../../core/models/student-data';
   template: `
     <div class="route-enter" style="display:flex; flex-direction:column; gap:16px;">
       <!-- Header Row -->
-      <div style="display:flex; align-items:center; gap:12px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap: wrap;">
         <h2 style="margin:0;">Dashboard</h2>
         <span class="chip" title="Current local time">{{ now | date: 'EEE, MMM d, y • h:mm a' }}</span>
+
+        <!-- School Selection -->
+        <div style="display:flex; align-items:center; gap:8px; margin-left: auto;">
+          <label for="school-selector" style="font-size: 0.9rem; font-weight: 600; color: var(--bah-text-muted);">School:</label>
+          <select
+            id="school-selector"
+            (change)="onSchoolSelected($event)"
+            style="padding: 6px 12px; border: 1px solid var(--bah-border); border-radius: 6px; background: white; min-width: 250px;">
+            <option value="">Select School</option>
+            <option
+              *ngFor="let school of schoolsList()"
+              [value]="school.InstitutionCode"
+              [selected]="selectedSchool()?.InstitutionCode === school.InstitutionCode">
+              {{ school.InstitutionCode }} - {{ school.InstitutionName }}
+            </option>
+          </select>
+          <div *ngIf="loadingSchools()" style="font-size: 0.8rem; color: var(--bah-text-muted);">Loading...</div>
+        </div>
+
         <a routerLink="/admin" class="btn-primary">Admin</a>
+      </div>
+
+      <!-- Selected School Display -->
+      <div *ngIf="selectedSchool()" style="background: #E8F7FB; border: 1px solid #B3E5FC; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="font-size: 0.85rem; color: var(--bah-text-muted);">Showing data for:</div>
+          <div style="font-weight: 700; color: #0B4F6C;">{{ selectedSchool()?.InstitutionName }}</div>
+          <div style="font-size: 0.85rem; color: var(--bah-text-muted);">({{ selectedSchool()?.InstitutionCode }})</div>
+        </div>
       </div>
 
       <!-- KPI Cards -->
@@ -90,11 +119,60 @@ import { StudentRecord } from '../../core/models/student-data';
     </div>
   `
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private readonly svc = inject(StudentsService);
+  private readonly api = inject(StudentApiService);
 
   students: StudentRecord[] = this.svc.list();
   now: Date = new Date();
+
+  // School selection properties
+  schoolsList = signal<SchoolOption[]>([]);
+  selectedSchool = signal<SelectedSchoolData | null>(null);
+  loadingSchools = signal<boolean>(false);
+
+  ngOnInit() {
+    this.loadSchoolsList();
+    this.subscribeToSelectedSchool();
+  }
+
+  private loadSchoolsList() {
+    this.loadingSchools.set(true);
+    this.api.getSchoolsList().subscribe({
+      next: (response) => {
+        this.schoolsList.set(response.schools);
+        this.loadingSchools.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load schools list:', error);
+        this.schoolsList.set([]);
+        this.loadingSchools.set(false);
+      }
+    });
+  }
+
+  private subscribeToSelectedSchool() {
+    this.api.selectedSchool$.subscribe(school => {
+      this.selectedSchool.set(school);
+    });
+  }
+
+  onSchoolSelected(event: Event) {
+    const selectedCode = (event.target as HTMLSelectElement).value;
+    if (!selectedCode) {
+      this.api.setSelectedSchool(null);
+      return;
+    }
+
+    const selectedSchool = this.schoolsList().find(school => school.InstitutionCode === selectedCode);
+    if (selectedSchool) {
+      const schoolData: SelectedSchoolData = {
+        InstitutionCode: selectedSchool.InstitutionCode,
+        InstitutionName: selectedSchool.InstitutionName
+      };
+      this.api.setSelectedSchool(schoolData);
+    }
+  }
 
   get totalStudents(): number { return this.students.length; }
 

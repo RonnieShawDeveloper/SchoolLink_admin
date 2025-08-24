@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportsService, DayReport } from '../../../core/services/reports.service';
+import { StudentApiService, SelectedSchoolData } from '../../../core/services/student-api.service';
 
 @Component({
   selector: 'app-reports-home',
@@ -153,13 +154,23 @@ import { ReportsService, DayReport } from '../../../core/services/reports.servic
     </div>
   `
 })
-export class ReportsHomeComponent {
+export class ReportsHomeComponent implements OnInit {
   private readonly reports = inject(ReportsService);
+  private readonly api = inject(StudentApiService);
 
   mode = signal<'Daily' | 'Weekly' | 'Monthly'>('Daily');
   selectedDate = new Date();
   periodAnchor = new Date();
   detailDate: Date | null = null;
+  selectedSchool = signal<SelectedSchoolData | null>(null);
+
+  ngOnInit() {
+    // Subscribe to selected school changes for future school-based filtering
+    this.api.selectedSchool$.subscribe(school => {
+      this.selectedSchool.set(school);
+      // TODO: Filter reports by school when ReportsService supports school filtering
+    });
+  }
 
   get report(): DayReport { return this.reports.getDayReport(this.selectedDate); }
 

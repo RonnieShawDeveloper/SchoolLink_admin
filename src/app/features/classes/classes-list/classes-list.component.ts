@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ClassesService } from '../../../core/services/classes.service';
 import { SchoolClass } from '../../../core/models/class';
+import { StudentApiService, SelectedSchoolData } from '../../../core/services/student-api.service';
 
 @Component({
   selector: 'app-classes-list',
@@ -50,9 +51,20 @@ import { SchoolClass } from '../../../core/models/class';
     </div>
   `
 })
-export class ClassesListComponent {
+export class ClassesListComponent implements OnInit {
   private readonly svc = inject(ClassesService);
+  private readonly api = inject(StudentApiService);
+
   classes: SchoolClass[] = this.svc.list();
+  selectedSchool = signal<SelectedSchoolData | null>(null);
+
+  ngOnInit() {
+    // Subscribe to selected school changes for future school-based filtering
+    this.api.selectedSchool$.subscribe(school => {
+      this.selectedSchool.set(school);
+      // TODO: Filter classes by school when SchoolClass model includes InstitutionCode
+    });
+  }
 
   attendance(c: SchoolClass) {
     return this.svc.attendanceForClass(c);
