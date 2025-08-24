@@ -11,8 +11,8 @@ applications:
             - npm ci
             - npx ampx -v
             - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
-            - FN=$(aws lambda list-functions --region $AWS_REGION --query "Functions[?contains(FunctionName, 'studentSearch')].FunctionName" --output text)
-            - FUNCTION_URL=$(aws lambda get-function-url-config --region $AWS_REGION --function-name $FN --query "FunctionUrl" --output text) || true
+            - node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('amplify_outputs.json','utf8'));const url=(p.custom&&p.custom.STUDENT_API_BASE)||'';console.log('FUNCTION_URL='+url);fs.writeFileSync('function_url.txt',url);" || true
+            - FUNCTION_URL=$(cat function_url.txt 2>/dev/null || true)
             - echo "FUNCTION_URL=$FUNCTION_URL"
             - sed -i "s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${FUNCTION_URL}';|" src/index.html || true
         build:

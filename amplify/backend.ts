@@ -22,11 +22,16 @@ export const backend = defineBackend({
 });
 
 // Attach a public Function URL (DEV only). Lock down later in prod.
-backend.studentSearchFn.resources.lambda.addFunctionUrl({
+const studentSearchFnUrl = backend.studentSearchFn.resources.lambda.addFunctionUrl({
   authType: lambda.FunctionUrlAuthType.NONE,
   cors: {
     allowedOrigins: ['*'],
     allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
     allowedHeaders: ['*'],
   },
+});
+
+// Expose the Function URL to the frontend build via amplify_outputs.json
+backend.addOutputs({
+  STUDENT_API_BASE: studentSearchFnUrl.url,
 });
