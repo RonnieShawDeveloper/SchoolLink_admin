@@ -1,4 +1,5 @@
-import { defineBackend, defineFunction, defineRestApi } from '@aws-amplify/backend';
+import { defineBackend, defineFunction } from '@aws-amplify/backend';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 // Define the Get Student Lambda (studentSearch) using environment variables for DB access
 const studentSearchFn = defineFunction({
@@ -16,19 +17,17 @@ const studentSearchFn = defineFunction({
   },
 });
 
-// Expose REST API routes mapped to the same function handler
-const api = defineRestApi({
-  name: 'student-api',
-  routes: [
-    { path: '/students/search', method: 'GET', function: studentSearchFn },
-    { path: '/students/by-institution', method: 'GET', function: studentSearchFn },
-    { path: '/students/update', method: 'POST', function: studentSearchFn },
-  ],
-  authorizationType: 'NONE',
+// Register only the function; expose it via Lambda Function URL (no API Gateway needed)
+export const backend = defineBackend({
+  studentSearchFn,
 });
 
-// Register resources with Amplify backend
-export default defineBackend({
-  studentSearchFn,
-  api,
+// Add a public Function URL with permissive CORS (dev). Restrict in production.
+backend.studentSearchFn.resources.cdkFunction.addFunctionUrl({
+  authType: lambda.FunctionUrlAuthType.NONE,
+  cors: {
+    allowedOrigins: ['*'],
+    allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST, lambda.HttpMethod.OPTIONS],
+    allowedHeaders: ['*'],
+  },
 });
