@@ -32,6 +32,6 @@ const studentSearchFnUrl = backend.studentSearchFn.resources.lambda.addFunctionU
 });
 
 // Expose the Function URL to the frontend build via amplify_outputs.json
-backend.addOutputs({
+backend.addOutput({
   STUDENT_API_BASE: studentSearchFnUrl.url,
 });
