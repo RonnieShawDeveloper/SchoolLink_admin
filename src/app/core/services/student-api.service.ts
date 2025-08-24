@@ -109,4 +109,12 @@ export class StudentApiService {
   getSchoolsList(): Observable<{ schools: SchoolOption[] }> {
     return this.http.get<{ schools: SchoolOption[] }>(`${this.baseUrl()}/schools/list`);
   }
+
+  getStudentsBySchool(institutionCode: string, page = 1, limit = 50): Observable<SearchResponse> {
+    const params = new HttpParams()
+      .set('institutionCode', institutionCode)
+      .set('page', page)
+      .set('limit', limit);
+    return this.http.get<SearchResponse>(`${this.baseUrl()}/students/by-school`, { params });
+  }
 }

@@ -35,6 +35,7 @@ function isSearchRoute(path: string) { return path.endsWith('/students/search');
 function isInstitutionRoute(path: string) { return path.endsWith('/students/by-institution'); }
 function isCountRoute(path: string) { return path.endsWith('/students/count'); }
 function isSchoolsRoute(path: string) { return path.endsWith('/schools/list'); }
+function isStudentsBySchoolRoute(path: string) { return path.endsWith('/students/by-school'); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
@@ -133,6 +134,38 @@ export const handler = async (event: any) => {
 
       const schools = Array.from(schoolsMap.values());
       return resp(200, { schools });
+    }
+
+    if (isStudentsBySchoolRoute(route)) {
+      if (method !== 'GET') return resp(405, { message: 'Method not allowed' });
+
+      const institutionCode = qs.institutionCode;
+      if (!institutionCode) {
+        return resp(400, { message: 'institutionCode parameter is required' });
+      }
+
+      const [cntRows]: any = await pool.query(
+        'SELECT COUNT(*) c FROM StudentData WHERE InstitutionCode = ?',
+        [institutionCode]
+      );
+      const total = Number(cntRows?.[0]?.c || 0);
+
+      const [rows]: any = await pool.query(
+        `SELECT
+          StudentID,
+          StudentName,
+          StudentOpenEMIS_ID,
+          EducationGrade,
+          InstitutionCode,
+          InstitutionName
+        FROM StudentData
+        WHERE InstitutionCode = ?
+        ORDER BY StudentName ASC
+        LIMIT ? OFFSET ?`,
+        [institutionCode, limit, offset]
+      );
+
+      return resp(200, { items: rows, total, page, totalPages: Math.ceil(total / limit) });
     }
 
     if (isUpdateRoute(route)) {
