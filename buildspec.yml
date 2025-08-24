@@ -11,9 +11,10 @@ applications:
             - npm ci
             - npx ampx -v
             - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
-            - API_ENDPOINT=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='student-api'].ApiEndpoint" --output text)
-            - echo "API_ENDPOINT=$API_ENDPOINT"
-            - sed -i "s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${API_ENDPOINT}';|" src/index.html || true
+            - FN=$(aws lambda list-functions --region $AWS_REGION --query "Functions[?contains(FunctionName, 'studentSearch')].FunctionName" --output text)
+            - FUNCTION_URL=$(aws lambda get-function-url-config --region $AWS_REGION --function-name $FN --query "FunctionUrl" --output text)
+            - echo "FUNCTION_URL=$FUNCTION_URL"
+            - sed -i "s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${FUNCTION_URL}';|" src/index.html || true
         build:
           commands:
             - npm run build
