@@ -10,6 +10,7 @@ import { ReportsHomeComponent } from './features/reports/reports-home/reports-ho
 import { authGuard } from './core/guards/auth.guard';
 import { AdminShellComponent } from './features/admin/admin-shell.component';
 import { AdminStudentEditorComponent } from './features/admin/student-editor/student-editor.component';
+import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -28,7 +29,8 @@ export const routes: Routes = [
         path: 'admin',
         component: AdminShellComponent,
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'students' },
+          { path: '', pathMatch: 'full', redirectTo: 'home' },
+          { path: 'home', component: AdminDashboardComponent },
           { path: 'students', component: AdminStudentEditorComponent },
         ]
       },
