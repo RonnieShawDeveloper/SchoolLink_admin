@@ -1,0 +1,26 @@
+version: 1.0
+applications:
+  - appRoot: .
+    env:
+      variables:
+        APP_ID: d2wwjdgjliumng
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+            - npx ampx -v
+            - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
+            - API_ENDPOINT=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='student-api'].ApiEndpoint" --output text)
+            - echo "API_ENDPOINT=$API_ENDPOINT"
+            - sed -i "s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${API_ENDPOINT}';|" src/index.html
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist/SchoolLink
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*

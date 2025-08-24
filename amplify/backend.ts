@@ -1,6 +1,4 @@
 import { defineBackend, defineFunction, defineRestApi } from '@aws-amplify/backend';
-import { auth } from './auth/resource';
-import { data } from './data/resource';
 
 // Define the Get Student Lambda (studentSearch) using environment variables for DB access
 const studentSearchFn = defineFunction({
@@ -29,10 +27,8 @@ const api = defineRestApi({
   authorizationType: 'NONE',
 });
 
-// Register resources with Amplify backend (keeping existing auth & data)
-defineBackend({
-  auth,
-  data,
+// Register resources with Amplify backend
+export default defineBackend({
   studentSearchFn,
   api,
 });
