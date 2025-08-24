@@ -58,12 +58,12 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Student Personal</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">StudentID</label><input class="app-input" formControlName="StudentID" type="number" /></div>
-            <div class="field"><label class="field-label">Student OpenEMIS ID</label><input class="app-input" formControlName="StudentOpenEMIS_ID" /></div>
+            <div class="field"><label class="field-label">SchoolLink ID</label><input class="app-input" formControlName="StudentID" type="number" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Student OpenEMIS ID</label><input class="app-input" formControlName="StudentOpenEMIS_ID" [disabled]="true" /></div>
             <div class="field"><label class="field-label">Student Name</label><input class="app-input" formControlName="StudentName" /></div>
             <div class="field"><label class="field-label">Student Status</label><input class="app-input" formControlName="StudentStatus" /></div>
             <div class="field"><label class="field-label">Gender</label><input class="app-input" formControlName="Gender" /></div>
-            <div class="field"><label class="field-label">Date Of Birth</label><input class="app-input" formControlName="DateOfBirth" placeholder="YYYY-MM-DD or DD/MM/YYYY" /></div>
+            <div class="field"><label class="field-label">Date Of Birth (DD-MM-YYYY)</label><input class="app-input" formControlName="DateOfBirth" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Age</label><input class="app-input" formControlName="Age" type="number" /></div>
             <div class="field"><label class="field-label">Preferred Nationality</label><input class="app-input" formControlName="PreferredNationality" /></div>
             <div class="field"><label class="field-label">All Nationalities</label><input class="app-input" formControlName="AllNationalities" /></div>
@@ -80,17 +80,17 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Institution & Location</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Institution Code</label><input class="app-input" formControlName="InstitutionCode" /></div>
-            <div class="field"><label class="field-label">Institution Name</label><input class="app-input" formControlName="InstitutionName" /></div>
-            <div class="field"><label class="field-label">Ownership</label><input class="app-input" formControlName="Ownewship" /></div>
-            <div class="field"><label class="field-label">Type</label><input class="app-input" formControlName="Type" /></div>
-            <div class="field"><label class="field-label">Sector</label><input class="app-input" formControlName="Sector" /></div>
-            <div class="field"><label class="field-label">Provider</label><input class="app-input" formControlName="Provider" /></div>
-            <div class="field"><label class="field-label">Locality</label><input class="app-input" formControlName="Locality" /></div>
-            <div class="field"><label class="field-label">Area Education Code</label><input class="app-input" formControlName="AreaEducationCode" /></div>
-            <div class="field"><label class="field-label">Area Education</label><input class="app-input" formControlName="AreaEducation" /></div>
-            <div class="field"><label class="field-label">Area Administrative Code</label><input class="app-input" formControlName="AreaAdministrativeCode" /></div>
-            <div class="field"><label class="field-label">Area Administrative</label><input class="app-input" formControlName="AreaAdministrative" /></div>
+            <div class="field"><label class="field-label">Institution Code</label><input class="app-input" formControlName="InstitutionCode" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Institution Name</label><input class="app-input" formControlName="InstitutionName" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Ownership</label><input class="app-input" formControlName="Ownewship" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Type</label><input class="app-input" formControlName="Type" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Sector</label><input class="app-input" formControlName="Sector" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Provider</label><input class="app-input" formControlName="Provider" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Locality</label><input class="app-input" formControlName="Locality" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Education Code</label><input class="app-input" formControlName="AreaEducationCode" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Education</label><input class="app-input" formControlName="AreaEducation" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Administrative Code</label><input class="app-input" formControlName="AreaAdministrativeCode" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Administrative</label><input class="app-input" formControlName="AreaAdministrative" [disabled]="true" /></div>
           </div>
         </section>
 
@@ -100,8 +100,8 @@ import { Subject, of } from 'rxjs';
           <div class="field-grid">
             <div class="field"><label class="field-label">Education Grade</label><input class="app-input" formControlName="EducationGrade" /></div>
             <div class="field"><label class="field-label">Academic Period</label><input class="app-input" formControlName="AcademicPeriod" /></div>
-            <div class="field"><label class="field-label">Start Date</label><input class="app-input" formControlName="StartDate" placeholder="YYYY-MM-DD" /></div>
-            <div class="field"><label class="field-label">End Date</label><input class="app-input" formControlName="EndDate" placeholder="YYYY-MM-DD" /></div>
+            <div class="field"><label class="field-label">Start Date (DD-MM-YYYY)</label><input class="app-input" formControlName="StartDate" placeholder="DD-MM-YYYY" /></div>
+            <div class="field"><label class="field-label">End Date (DD-MM-YYYY)</label><input class="app-input" formControlName="EndDate" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Class Name</label><input class="app-input" formControlName="ClassName" /></div>
             <div class="field"><label class="field-label">Last Grade Level Enrolled</label><input class="app-input" formControlName="LastGradeLevelEnrolled" /></div>
             <div class="field" style="grid-column:1 / -1;"><label class="field-label">Previous School</label><input class="app-input" formControlName="PreviousSchool" /></div>
@@ -120,7 +120,7 @@ import { Subject, of } from 'rxjs';
             <div class="field"><label class="field-label">Mother Address</label><input class="app-input" formControlName="MotherAddress" /></div>
             <div class="field"><label class="field-label">Mother Telephone</label><input class="app-input" formControlName="MotherTelephone" /></div>
             <div class="field"><label class="field-label">Mother Email</label><input class="app-input" formControlName="MotherEmail" /></div>
-            <div class="field"><label class="field-label">Mother DOB</label><input class="app-input" formControlName="MotherDOB" placeholder="YYYY-MM-DD" /></div>
+            <div class="field"><label class="field-label">Mother DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="MotherDOB" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Mother Is Deceased</label><input class="app-input" formControlName="MotherIsDeceased" /></div>
             <div class="field"><label class="field-label">Mother Nationality</label><input class="app-input" formControlName="MotherNationality" /></div>
           </div>
@@ -138,7 +138,7 @@ import { Subject, of } from 'rxjs';
             <div class="field"><label class="field-label">Father Address</label><input class="app-input" formControlName="FatherAddress" /></div>
             <div class="field"><label class="field-label">Father Telephone</label><input class="app-input" formControlName="FatherTelephone" /></div>
             <div class="field"><label class="field-label">Father Email</label><input class="app-input" formControlName="FatherEmail" /></div>
-            <div class="field"><label class="field-label">Father DOB</label><input class="app-input" formControlName="FatherDOB" placeholder="YYYY-MM-DD" /></div>
+            <div class="field"><label class="field-label">Father DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="FatherDOB" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Father Is Deceased</label><input class="app-input" formControlName="FatherIsDeceased" /></div>
             <div class="field"><label class="field-label">Father Nationality</label><input class="app-input" formControlName="FatherNationality" /></div>
           </div>
@@ -151,13 +151,13 @@ import { Subject, of } from 'rxjs';
             <div class="field"><label class="field-label">Guardian OpenEMIS ID</label><input class="app-input" formControlName="GuardianOpenEMIS_ID" /></div>
             <div class="field"><label class="field-label">Guardian Name</label><input class="app-input" formControlName="GuardianName" /></div>
             <div class="field"><label class="field-label">Guardian Gender</label><input class="app-input" formControlName="GuardianGender" /></div>
-            <div class="field"><label class="field-label">Guardian Date Of Birth</label><input class="app-input" formControlName="GuardianDateOfBirth" placeholder="YYYY-MM-DD" /></div>
+            <div class="field"><label class="field-label">Guardian Date Of Birth (DD-MM-YYYY)</label><input class="app-input" formControlName="GuardianDateOfBirth" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Guardian First Name</label><input class="app-input" formControlName="GuardianFirstName" /></div>
             <div class="field"><label class="field-label">Guardian Last Name</label><input class="app-input" formControlName="GuardianLastName" /></div>
             <div class="field"><label class="field-label">Guardian Address</label><input class="app-input" formControlName="GuardianAddress" /></div>
             <div class="field"><label class="field-label">Guardian Telephone</label><input class="app-input" formControlName="GuardianTelephone" /></div>
             <div class="field"><label class="field-label">Guardian Email</label><input class="app-input" formControlName="GuardianEmail" /></div>
-            <div class="field"><label class="field-label">Guardian DOB</label><input class="app-input" formControlName="GuardianDOB" placeholder="YYYY-MM-DD" /></div>
+            <div class="field"><label class="field-label">Guardian DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="GuardianDOB" placeholder="DD-MM-YYYY" /></div>
             <div class="field"><label class="field-label">Guardian Is Deceased</label><input class="app-input" formControlName="GuardianIsDeceased" /></div>
             <div class="field"><label class="field-label">Guardian Nationality</label><input class="app-input" formControlName="GuardianNationality" /></div>
           </div>
@@ -289,7 +289,28 @@ export class AdminStudentEditorComponent {
 
   select(s: StudentData) {
     this.results.set([]);
-    this.form.reset({ ...s });
+    // Clear the search box
+    const searchInput = document.querySelector('input[placeholder="Type 3+ characters"]') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    this.lastQuery = '';
+
+    // Format dates for display (convert YYYY-MM-DD to DD-MM-YYYY)
+    const formattedData = { ...s };
+    const dateFields = ['DateOfBirth', 'StartDate', 'EndDate', 'MotherDOB', 'FatherDOB', 'GuardianDateOfBirth', 'GuardianDOB'];
+    dateFields.forEach(field => {
+      if (formattedData[field as keyof StudentData] && typeof formattedData[field as keyof StudentData] === 'string') {
+        const dateValue = formattedData[field as keyof StudentData] as string;
+        if (dateValue.match(/^\d{4}-\d{2}-\d{2}/)) {
+          // Convert YYYY-MM-DD to DD-MM-YYYY
+          const [year, month, day] = dateValue.split('T')[0].split('-');
+          (formattedData as any)[field] = `${day}-${month}-${year}`;
+        }
+      }
+    });
+
+    this.form.reset({ ...formattedData });
     this.formEnabled.set(true);
   }
 
@@ -302,6 +323,20 @@ export class AdminStudentEditorComponent {
   save() {
     if (!this.formEnabled()) return;
     const payload = { ...this.form.value } as Partial<StudentData>;
+
+    // Convert dates from DD-MM-YYYY format back to YYYY-MM-DD for database storage
+    const dateFields = ['DateOfBirth', 'StartDate', 'EndDate', 'MotherDOB', 'FatherDOB', 'GuardianDateOfBirth', 'GuardianDOB'];
+    dateFields.forEach(field => {
+      if (payload[field as keyof StudentData] && typeof payload[field as keyof StudentData] === 'string') {
+        const dateValue = payload[field as keyof StudentData] as string;
+        if (dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+          // Convert DD-MM-YYYY to YYYY-MM-DD
+          const [day, month, year] = dateValue.split('-');
+          (payload as any)[field] = `${year}-${month}-${day}`;
+        }
+      }
+    });
+
     this.api.updateStudent(payload).subscribe({
       next: (res) => {
         if (res?.insertId && !this.form.value.StudentID) {
