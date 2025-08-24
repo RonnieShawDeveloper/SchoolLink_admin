@@ -37,6 +37,7 @@ function isCountRoute(path: string) { return path.endsWith('/students/count'); }
 function isSchoolsRoute(path: string) { return path.endsWith('/schools/list'); }
 function isStudentsBySchoolRoute(path: string) { return path.endsWith('/students/by-school'); }
 function isSchoolStatsRoute(path: string) { return path.endsWith('/students/school-stats'); }
+function isStudentByIdRoute(path: string) { return path.match(/\/students\/\d+$/); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
@@ -199,6 +200,25 @@ export const handler = async (event: any) => {
         femaleCount,
         institutionCode
       });
+    }
+
+    if (isStudentByIdRoute(route)) {
+      if (method !== 'GET') return resp(405, { message: 'Method not allowed' });
+
+      // Extract student ID from the route path
+      const studentIdMatch = route.match(/\/students\/(\d+)$/);
+      if (!studentIdMatch) {
+        return resp(400, { message: 'Invalid student ID format' });
+      }
+
+      const studentId = parseInt(studentIdMatch[1]);
+      const [rows]: any = await pool.query('SELECT * FROM StudentData WHERE StudentID = ? LIMIT 1', [studentId]);
+
+      if (rows.length === 0) {
+        return resp(404, { message: 'Student not found' });
+      }
+
+      return resp(200, { student: rows[0] });
     }
 
     if (isUpdateRoute(route)) {

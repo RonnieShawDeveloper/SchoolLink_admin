@@ -126,4 +126,8 @@ export class StudentApiService {
     const params = new HttpParams().set('institutionCode', institutionCode);
     return this.http.get<SchoolStatistics>(`${this.baseUrl()}/students/school-stats`, { params });
   }
+
+  getStudentById(studentId: number): Observable<{ student: StudentData }> {
+    return this.http.get<{ student: StudentData }>(`${this.baseUrl()}/students/${studentId}`);
+  }
 }

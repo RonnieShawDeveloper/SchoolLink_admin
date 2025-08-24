@@ -1,243 +1,345 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { StudentsService } from '../../../core/services/students.service';
-import { StudentRecord } from '../../../core/models/student-data';
+import { StudentApiService } from '../../../core/services/student-api.service';
+import { StudentData } from '../../../core/models/student-data';
 import { QrCodeComponent } from 'ng-qrcode';
+
+interface ClassCheckin {
+  className: string;
+  time: Date;
+}
+
+interface SimulatedCheckins {
+  gateIn: Date;
+  classes: ClassCheckin[];
+  gateOut: Date | null;
+}
 
 @Component({
   selector: 'app-student-detail',
   standalone: true,
   imports: [CommonModule, RouterLink, QrCodeComponent],
   template: `
-    <div class="route-enter" *ngIf="student as s; else notFound">
-      <div class="app-card" style="padding:16px; display:flex; align-items:center; gap:16px;">
-        <ng-container *ngIf="!photoError && s.photoUrl; else initialsTpl">
-          <img [src]="s.photoUrl" (error)="photoError = true" alt="Photo"
-               style="width:92px; height:92px; border-radius:12px; object-fit:cover; background:#EEF6F9; border:1px solid var(--bah-border);" />
-        </ng-container>
-        <ng-template #initialsTpl>
-          <div [title]="s.StudentName" style="width:92px; height:92px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem; color:#fff; background: var(--bah-primary); border:1px solid var(--bah-border);">
-            {{ initials(s.StudentName) }}
-          </div>
-        </ng-template>
-        <div style="flex:1;">
-          <div style="font-weight:700; font-size:1.1rem;">{{ s.StudentName }}</div>
-          <div class="chip">Grade {{ s.grade }}</div>
-          <div class="chip" style="background:#FFF3CD; color:#6B5B00;">{{ s.school }}</div>
-          <div style="font-size:0.9rem; color:var(--bah-text-muted);">SID: {{ s.StudentOpenEMIS_ID }}</div>
-          <a routerLink="/students" style="font-size:0.85rem;">← Back to Students</a>
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="route-enter app-card" style="padding: 32px; text-align: center;">
+      <div style="color: var(--bah-text-muted);">Loading student details...</div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error()" class="route-enter app-card" style="padding: 32px; text-align: center; color: var(--bah-text-muted);">
+      <div style="font-size: 1.2rem; font-weight: 600;">{{ error() }}</div>
+      <div style="margin-top: 8px;">Please try again or go back to the students list.</div>
+      <a routerLink="/students" class="btn-primary" style="margin-top: 16px;">← Back to Students</a>
+    </div>
+
+    <!-- Student Details -->
+    <div *ngIf="student() && !loading() && !error()" class="route-enter">
+      <!-- Header Card -->
+      <div class="app-card" style="padding: 16px; display: flex; align-items: center; gap: 16px;">
+        <div [title]="student()!.StudentName" style="width: 92px; height: 92px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; color: #fff; background: var(--bah-primary); border: 1px solid var(--bah-border);">
+          {{ initials(student()!.StudentName || '') }}
         </div>
-        <qr-code [value]="qrValue" [size]="120" [errorCorrectionLevel]="'M'"></qr-code>
+        <div style="flex: 1;">
+          <div style="font-weight: 700; font-size: 1.1rem;">{{ student()!.StudentName }}</div>
+          <div class="chip">{{ student()!.EducationGrade || 'No Grade' }}</div>
+          <div class="chip" style="background: #FFF3CD; color: #6B5B00;">{{ student()!.InstitutionName || 'No School' }}</div>
+          <div style="font-size: 0.9rem; color: var(--bah-text-muted);">Student ID: {{ student()!.StudentOpenEMIS_ID }}</div>
+          <a routerLink="/students" style="font-size: 0.85rem;">← Back to Students</a>
+        </div>
+        <qr-code [value]="qrValue()" [size]="120" [errorCorrectionLevel]="'M'"></qr-code>
       </div>
 
-      <div style="margin-top:16px; display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-        <!-- Institution Details -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Institution Details</h3>
-          <div *ngFor="let f of instFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
-          </div>
-        </div>
+      <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Daily Check-ins Timeline -->
+        <div class="app-card" style="padding: 16px; grid-column: 1 / -1;">
+          <h3 style="margin: 0 0 16px 0;">Today's Check-in Timeline</h3>
+          <div style="position: relative;">
+            <!-- Timeline Line -->
+            <div style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: #e0e7ff;"></div>
 
-        <!-- Attendance -->
-        <div class="app-card" style="padding:16px;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <h3 style="margin:0;">Attendance Today</h3>
-            <span class="chip" [ngStyle]="{ background: s.attendanceToday.status === 'On Campus' ? '#E7F8F0' : '#FDECEC', color: s.attendanceToday.status === 'On Campus' ? '#116149' : '#8A1C1C' }">
-              {{ s.attendanceToday.status }}
-            </span>
-          </div>
-          <div style="margin-top:8px;">
-            <div><strong>Gate Check-In:</strong> {{ s.attendanceToday.gateCheckIn | date: 'shortTime' }}</div>
-            <div style="margin-top:8px;"><strong>Class Check-ins:</strong></div>
-            <ul style="margin:6px 0 0 18px; padding:0;">
-              <li *ngFor="let c of s.attendanceToday.classCheckIns">{{ c.className }} — {{ c.time | date: 'shortTime' }}</li>
-            </ul>
-            <div style="margin-top:8px;" *ngIf="s.attendanceToday.gateCheckOut; else stillHere">
-              <strong>Gate Check-Out:</strong> {{ s.attendanceToday.gateCheckOut | date: 'shortTime' }}
+            <!-- Gate In -->
+            <div style="display: flex; align-items: center; margin-bottom: 16px; position: relative;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1;">
+                📥
+              </div>
+              <div style="margin-left: 16px;">
+                <div style="font-weight: 600;">Gate Check-In</div>
+                <div style="font-size: 0.9rem; color: var(--bah-text-muted);">{{ simulatedCheckins().gateIn | date: 'shortTime' }}</div>
+              </div>
             </div>
-            <ng-template #stillHere>
-              <div style="margin-top:8px; color: var(--bah-text-muted);">Gate Check-Out: —</div>
-            </ng-template>
+
+            <!-- Class Check-ins -->
+            <div *ngFor="let checkin of simulatedCheckins().classes" style="display: flex; align-items: center; margin-bottom: 16px; position: relative;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1;">
+                📚
+              </div>
+              <div style="margin-left: 16px;">
+                <div style="font-weight: 600;">{{ checkin.className }}</div>
+                <div style="font-size: 0.9rem; color: var(--bah-text-muted);">{{ checkin.time | date: 'shortTime' }}</div>
+              </div>
+            </div>
+
+            <!-- Gate Out -->
+            <div style="display: flex; align-items: center; position: relative;">
+              <div [ngStyle]="getGateOutStyle()" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1;">
+                📤
+              </div>
+              <div style="margin-left: 16px;">
+                <div style="font-weight: 600;">Gate Check-Out</div>
+                <div style="font-size: 0.9rem; color: var(--bah-text-muted);">
+                  {{ simulatedCheckins().gateOut ? (simulatedCheckins().gateOut | date: 'shortTime') : 'Still on campus' }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Student Personal Details -->
-        <div class="app-card" style="padding:16px; grid-column: 1 / -1;">
-          <h3 style="margin:0 0 8px 0;">Student Personal Details</h3>
-          <div *ngFor="let f of personalFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+        <!-- Student Personal Information -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Student Personal Information</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Full Name:</strong> {{ student()!.StudentName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Gender:</strong> {{ student()!.Gender || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Date of Birth:</strong> {{ formatDateForDisplay(student()!.DateOfBirth) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Age:</strong> {{ student()!.Age || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Nationality:</strong> {{ student()!.PreferredNationality || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Identity Number:</strong> {{ student()!.IdentityNumber || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Address:</strong> {{ student()!.Address || '—' }}
           </div>
         </div>
 
-        <!-- Parents & Contacts (Derived) -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Parents & Contacts</h3>
-          <div *ngFor="let g of s.guardians" style="padding:8px 0; border-top:1px solid var(--bah-border);">
-            <div style="font-weight:600;">{{ g.name }} <span class="chip" style="margin-left:6px;">{{ g.relation }}</span></div>
-            <div style="font-size:0.9rem; color:var(--bah-text-muted);">Phone: {{ g.phone }} · Email: {{ g.email }}</div>
+        <!-- Academic Information -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Academic Information</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Education Grade:</strong> {{ student()!.EducationGrade || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Academic Period:</strong> {{ student()!.AcademicPeriod || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Class Name:</strong> {{ student()!.ClassName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Start Date:</strong> {{ formatDateForDisplay(student()!.StartDate) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>End Date:</strong> {{ formatDateForDisplay(student()!.EndDate) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Previous School:</strong> {{ student()!.PreviousSchool || '—' }}
           </div>
         </div>
 
-        <!-- Academic Details -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Academic Details</h3>
-          <div *ngFor="let f of academicFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+        <!-- Mother's Information -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Mother's Information</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Name:</strong> {{ student()!.MotherName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Contact:</strong> {{ student()!.MotherContact || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Email:</strong> {{ student()!.MotherEmail || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Telephone:</strong> {{ student()!.MotherTelephone || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Date of Birth:</strong> {{ formatDateForDisplay(student()!.MotherDOB) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Address:</strong> {{ student()!.MotherAddress || '—' }}
           </div>
         </div>
 
-        <!-- Mother's Details -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Mother's Details</h3>
-          <div *ngFor="let f of motherFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+        <!-- Father's Information -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Father's Information</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Name:</strong> {{ student()!.FatherName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Contact:</strong> {{ student()!.FatherContact || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Email:</strong> {{ student()!.FatherEmail || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Telephone:</strong> {{ student()!.FatherTelephone || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Date of Birth:</strong> {{ formatDateForDisplay(student()!.FatherDOB) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Address:</strong> {{ student()!.FatherAddress || '—' }}
           </div>
         </div>
 
-        <!-- Father's Details -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Father's Details</h3>
-          <div *ngFor="let f of fatherFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+        <!-- Guardian's Information -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Guardian's Information</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Name:</strong> {{ student()!.GuardianName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Gender:</strong> {{ student()!.GuardianGender || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Contact:</strong> {{ student()!.GuardianTelephone || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Email:</strong> {{ student()!.GuardianEmail || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Date of Birth:</strong> {{ formatDateForDisplay(student()!.GuardianDateOfBirth) || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Address:</strong> {{ student()!.GuardianAddress || '—' }}
           </div>
         </div>
 
-        <!-- Guardian's Details -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Guardian's Details</h3>
-          <div *ngFor="let f of guardianFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+        <!-- Institution Details -->
+        <div class="app-card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px 0;">Institution Details</h3>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Institution Code:</strong> {{ student()!.InstitutionCode || '—' }}
           </div>
-        </div>
-
-        <!-- Living Situation -->
-        <div class="app-card" style="padding:16px;">
-          <h3 style="margin:0 0 8px 0;">Living Situation</h3>
-          <div *ngFor="let f of livingFields" style="padding:6px 0; border-top:1px solid var(--bah-border);">
-            <strong>{{ f.label }}:</strong> {{ display(s[f.key]) }}
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Institution Name:</strong> {{ student()!.InstitutionName || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Ownership:</strong> {{ student()!.Ownewship || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Type:</strong> {{ student()!.Type || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Sector:</strong> {{ student()!.Sector || '—' }}
+          </div>
+          <div style="padding: 6px 0; border-top: 1px solid var(--bah-border);">
+            <strong>Locality:</strong> {{ student()!.Locality || '—' }}
           </div>
         </div>
       </div>
     </div>
-    <ng-template #notFound>
-      <div class="app-card" style="padding:16px;">Student not found. <a routerLink="/students">Back to list</a></div>
-    </ng-template>
   `
 })
-export class StudentDetailComponent {
+export class StudentDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly svc = inject(StudentsService);
+  private readonly api = inject(StudentApiService);
 
-  student: StudentRecord | undefined = this.svc.getById(this.route.snapshot.params['id']);
-  photoError = false;
+  student = signal<StudentData | null>(null);
+  loading = signal<boolean>(true);
+  error = signal<string>('');
 
-  // Section field descriptors
-  readonly instFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Institution Code', key: 'InstitutionCode' },
-    { label: 'Institution Name', key: 'InstitutionName' },
-    { label: 'Ownership', key: 'Ownewship' },
-    { label: 'Type', key: 'Type' },
-    { label: 'Sector', key: 'Sector' },
-    { label: 'Provider', key: 'Provider' },
-    { label: 'Locality', key: 'Locality' },
-    { label: 'Area Education Code', key: 'AreaEducationCode' },
-    { label: 'Area Education', key: 'AreaEducation' },
-    { label: 'Area Administrative Code', key: 'AreaAdministrativeCode' },
-    { label: 'Area Administrative', key: 'AreaAdministrative' },
-  ];
+  ngOnInit() {
+    const studentId = this.route.snapshot.params['id'];
+    if (!studentId || isNaN(Number(studentId))) {
+      this.error.set('Invalid student ID');
+      this.loading.set(false);
+      return;
+    }
 
-  readonly academicFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Education Grade', key: 'EducationGrade' },
-    { label: 'Academic Period', key: 'AcademicPeriod' },
-    { label: 'Start Date', key: 'StartDate' },
-    { label: 'End Date', key: 'EndDate' },
-    { label: 'Class Name', key: 'ClassName' },
-    { label: 'Last Grade Level Enrolled', key: 'LastGradeLevelEnrolled' },
-    { label: 'Previous School', key: 'PreviousSchool' },
-  ];
-
-  readonly personalFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Student OpenEMIS ID', key: 'StudentOpenEMIS_ID' },
-    { label: 'Student Name', key: 'StudentName' },
-    { label: 'Student Status', key: 'StudentStatus' },
-    { label: 'Gender', key: 'Gender' },
-    { label: 'Date Of Birth', key: 'DateOfBirth' },
-    { label: 'Age', key: 'Age' },
-    { label: 'Preferred Nationality', key: 'PreferredNationality' },
-    { label: 'All Nationalities', key: 'AllNationalities' },
-    { label: 'Default Identity Type', key: 'DefaultIdentitytype' },
-    { label: 'Identity Number', key: 'IdentityNumber' },
-    { label: 'Risk Index', key: 'RiskIndex' },
-    { label: 'Extra Activities', key: 'ExtraActivities' },
-    { label: 'Address', key: 'Address' },
-    { label: 'NIB2', key: 'NIB2' },
-  ];
-
-  readonly motherFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Mother OpenEMIS ID', key: 'MotherOpenEMIS_ID' },
-    { label: 'Mother Name', key: 'MotherName' },
-    { label: 'Mother Contact', key: 'MotherContact' },
-    { label: 'Mother First Name', key: 'MotherFirstName' },
-    { label: 'Mother Last Name', key: 'MotherLastName' },
-    { label: 'Mother Address', key: 'MotherAddress' },
-    { label: 'Mother Telephone', key: 'MotherTelephone' },
-    { label: 'Mother Email', key: 'MotherEmail' },
-    { label: 'Mother DOB', key: 'MotherDOB' },
-    { label: 'Mother Is Deceased', key: 'MotherIsDeceased' },
-    { label: 'Mother Nationality', key: 'MotherNationality' },
-  ];
-
-  readonly fatherFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Father OpenEMIS ID', key: 'FatherOpenEMIS_ID' },
-    { label: 'Father Name', key: 'FatherName' },
-    { label: 'Father Contact', key: 'FatherContact' },
-    { label: 'Father First Name', key: 'FatherFirstName' },
-    { label: 'Father Last Name', key: 'FatherLastName' },
-    { label: 'Father Address', key: 'FatherAddress' },
-    { label: 'Father Telephone', key: 'FatherTelephone' },
-    { label: 'Father Email', key: 'FatherEmail' },
-    { label: 'Father DOB', key: 'FatherDOB' },
-    { label: 'Father Is Deceased', key: 'FatherIsDeceased' },
-    { label: 'Father Nationality', key: 'FatherNationality' },
-  ];
-
-  readonly guardianFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Guardian OpenEMIS ID', key: 'GuardianOpenEMIS_ID' },
-    { label: 'Guardian Name', key: 'GuardianName' },
-    { label: 'Guardian Gender', key: 'GuardianGender' },
-    { label: 'Guardian Date Of Birth', key: 'GuardianDateOfBirth' },
-    { label: 'Guardian First Name', key: 'GuardianFirstName' },
-    { label: 'Guardian Last Name', key: 'GuardianLastName' },
-    { label: 'Guardian Address', key: 'GuardianAddress' },
-    { label: 'Guardian Telephone', key: 'GuardianTelephone' },
-    { label: 'Guardian Email', key: 'GuardianEmail' },
-    { label: 'Guardian DOB', key: 'GuardianDOB' },
-    { label: 'Guardian Is Deceased', key: 'GuardianIsDeceased' },
-    { label: 'Guardian Nationality', key: 'GuardianNationality' },
-  ];
-
-  readonly livingFields: Array<{ label: string; key: keyof StudentRecord }> = [
-    { label: 'Student living with', key: 'Studentlivingwith' },
-    { label: 'Student Living With Guardian', key: 'StudentLivingWithGuardian' },
-  ];
-
-  get qrValue(): string {
-    return this.student ? JSON.stringify({ sid: this.student.StudentOpenEMIS_ID }) : '';
+    this.api.getStudentById(Number(studentId)).subscribe({
+      next: (response) => {
+        this.student.set(response.student);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load student:', err);
+        this.error.set('Student not found');
+        this.loading.set(false);
+      }
+    });
   }
 
-  initials(name?: string): string {
-    const parts = (name ?? '').trim().split(/\s+/);
-    const first = parts[0]?.[0] ?? '';
-    const last = parts[parts.length - 1]?.[0] ?? '';
-    return (first + last).toUpperCase();
+  qrValue(): string {
+    const s = this.student();
+    if (!s) return '';
+    return `STUDENT:${s.StudentOpenEMIS_ID}:${s.StudentName}`;
   }
 
-  display(v: unknown): string {
-    if (v === null || v === undefined || v === '') return '—';
-    if (typeof v === 'string') return v;
-    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-    try { return JSON.stringify(v); } catch { return String(v); }
+  initials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0] || '').join('').substring(0, 2).toUpperCase();
+  }
+
+  formatDateForDisplay(dateValue: string | null | undefined): string {
+    if (!dateValue) return '';
+
+    // Handle ISO format (e.g., "2007-10-16T00:00:00.000Z")
+    if (dateValue.includes('T')) {
+      const [datePart] = dateValue.split('T');
+      const [year, month, day] = datePart.split('-');
+      return `${day}-${month}-${year}`;
+    }
+
+    // Handle YYYY-MM-DD format
+    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateValue.split('-');
+      return `${day}-${month}-${year}`;
+    }
+
+    // If already in DD-MM-YYYY format or unknown format, return as is
+    return dateValue;
+  }
+
+  getGateOutStyle(): any {
+    const checkins = this.simulatedCheckins();
+    return {
+      background: checkins.gateOut ? '#ef4444' : '#9ca3af'
+    };
+  }
+
+  simulatedCheckins(): SimulatedCheckins {
+    const today = new Date();
+
+    // Gate In: 7:45 AM
+    const gateIn = new Date(today);
+    gateIn.setHours(7, 45, 0, 0);
+
+    // Class check-ins throughout the day
+    const classes: ClassCheckin[] = [
+      {
+        className: 'Homeroom - Morning Assembly',
+        time: new Date(today.setHours(8, 15, 0, 0))
+      },
+      {
+        className: 'Mathematics',
+        time: new Date(today.setHours(9, 30, 0, 0))
+      },
+      {
+        className: 'English Language Arts',
+        time: new Date(today.setHours(10, 45, 0, 0))
+      },
+      {
+        className: 'Science',
+        time: new Date(today.setHours(13, 15, 0, 0))
+      },
+      {
+        className: 'Social Studies',
+        time: new Date(today.setHours(14, 30, 0, 0))
+      }
+    ];
+
+    // Gate Out: 3:30 PM (70% chance) or null (still on campus)
+    const gateOut = Math.random() > 0.3 ? new Date(today.setHours(15, 30, 0, 0)) : null;
+
+    return { gateIn, classes, gateOut };
   }
 }
