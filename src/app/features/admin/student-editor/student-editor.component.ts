@@ -77,9 +77,9 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
 
       <!-- Editor Form Sections -->
       <div class="form-sections" [formGroup]="form">
-        <!-- Student Personal -->
+        <!-- Student Personal Information -->
         <section class="fieldset-card">
-          <h3 class="section-title">Student Personal</h3>
+          <h3 class="section-title">Student Personal Information</h3>
           <div class="field-grid">
             <div class="field"><label class="field-label">SchoolLink ID</label><input
               class="app-input" formControlName="StudentID" type="number" [disabled]="true"/></div>
@@ -93,10 +93,10 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
                                                                                formControlName="Gender"/>
             </div>
             <div class="field"><label class="field-label">Date Of Birth (DD-MM-YYYY)</label><input
-              class="app-input" formControlName="DateOfBirth" placeholder="DD-MM-YYYY"/></div>
+              class="app-input" formControlName="DateOfBirth" placeholder="DD-MM-YYYY" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Age</label><input class="app-input"
                                                                             formControlName="Age"
-                                                                            type="number"/></div>
+                                                                            type="number" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Preferred Nationality</label><input
               class="app-input" formControlName="PreferredNationality"/></div>
             <div class="field"><label class="field-label">All Nationalities</label><input
@@ -178,16 +178,26 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
 
         <!-- Academic -->
         <section class="fieldset-card">
-          <h3 class="section-title">Academic</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 class="section-title" style="margin: 0;">Academic</h3>
+            <button
+              *ngIf="formEnabled()"
+              type="button"
+              class="btn-secondary"
+              (click)="openAcademicUpdateDialog()"
+              style="padding: 6px 12px; font-size: 0.85rem;">
+              Update
+            </button>
+          </div>
           <div class="field-grid">
             <div class="field"><label class="field-label">Education Grade</label><input
-              class="app-input" formControlName="EducationGrade"/></div>
+              class="app-input" formControlName="EducationGrade" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Academic Period</label><input
-              class="app-input" formControlName="AcademicPeriod"/></div>
+              class="app-input" formControlName="AcademicPeriod" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Start Date (DD-MM-YYYY)</label><input
-              class="app-input" formControlName="StartDate" placeholder="DD-MM-YYYY"/></div>
+              class="app-input" formControlName="StartDate" placeholder="DD-MM-YYYY" [disabled]="true"/></div>
             <div class="field"><label class="field-label">End Date (DD-MM-YYYY)</label><input
-              class="app-input" formControlName="EndDate" placeholder="DD-MM-YYYY"/></div>
+              class="app-input" formControlName="EndDate" placeholder="DD-MM-YYYY" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Class Name</label><input class="app-input"
                                                                                    formControlName="ClassName"/>
             </div>
@@ -303,6 +313,7 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
       <!-- Academic Update Dialog -->
       <app-academic-update-dialog
         *ngIf="showAcademicDialog()"
+        [currentData]="getCurrentAcademicData()"
         (confirmed)="onAcademicUpdateConfirmed($event)"
         (cancelled)="onAcademicUpdateCancelled()">
       </app-academic-update-dialog>
@@ -320,8 +331,8 @@ export class AdminStudentEditorComponent implements OnInit {
     StudentName: [''],
     StudentStatus: [''],
     Gender: [''],
-    DateOfBirth: [''],
-    Age: [null],
+    DateOfBirth: [{value: '', disabled: true}],
+    Age: [{value: null, disabled: true}],
     PreferredNationality: [''],
     AllNationalities: [''],
     DefaultIdentityType: [{value: '', disabled: true}],
@@ -343,10 +354,10 @@ export class AdminStudentEditorComponent implements OnInit {
     AreaAdministrativeCode: [{value: '', disabled: true}],
     AreaAdministrative: [{value: '', disabled: true}],
     // academic
-    EducationGrade: [''],
-    AcademicPeriod: [''],
-    StartDate: [''],
-    EndDate: [''],
+    EducationGrade: [{value: '', disabled: true}],
+    AcademicPeriod: [{value: '', disabled: true}],
+    StartDate: [{value: '', disabled: true}],
+    EndDate: [{value: '', disabled: true}],
     ClassName: [''],
     LastGradeLevelEnrolled: [''],
     PreviousSchool: [''],
@@ -486,34 +497,55 @@ export class AdminStudentEditorComponent implements OnInit {
   }
 
   onAcademicUpdateConfirmed(academicData: AcademicUpdateData) {
-    if (!this.pendingSchoolData) return;
+    // Check if this is a school change or standalone academic update
+    if (this.pendingSchoolData) {
+      // Handle school change scenario (existing logic)
+      const schoolFields = {
+        InstitutionCode: this.pendingSchoolData.InstitutionCode,
+        InstitutionName: this.pendingSchoolData.InstitutionName,
+        Ownewship: this.pendingSchoolData.Ownewship,
+        Type: this.pendingSchoolData.Type,
+        Sector: this.pendingSchoolData.Sector,
+        Provider: this.pendingSchoolData.Provider,
+        Locality: this.pendingSchoolData.Locality,
+        AreaEducationCode: this.pendingSchoolData.AreaEducationCode,
+        AreaEducation: this.pendingSchoolData.AreaEducation,
+        AreaAdministrativeCode: this.pendingSchoolData.AreaAdministrativeCode,
+        AreaAdministrative: this.pendingSchoolData.AreaAdministrative,
+        // Academic fields from dialog (already converted to DD-MM-YYYY format)
+        EducationGrade: academicData.EducationGrade,
+        AcademicPeriod: academicData.AcademicPeriod,
+        StartDate: academicData.StartDate,
+        EndDate: academicData.EndDate
+      };
+      this.form.patchValue(schoolFields);
+      this.form.get('InstitutionCode')?.disable();
+      this.pendingSchoolData = null;
+    } else {
+      // Handle standalone academic update
+      // Temporarily enable academic fields to update them
+      this.form.get('EducationGrade')?.enable();
+      this.form.get('AcademicPeriod')?.enable();
+      this.form.get('StartDate')?.enable();
+      this.form.get('EndDate')?.enable();
 
-    // Update all school-related form fields (static data)
-    const schoolFields = {
-      InstitutionCode: this.pendingSchoolData.InstitutionCode,
-      InstitutionName: this.pendingSchoolData.InstitutionName,
-      Ownewship: this.pendingSchoolData.Ownewship,
-      Type: this.pendingSchoolData.Type,
-      Sector: this.pendingSchoolData.Sector,
-      Provider: this.pendingSchoolData.Provider,
-      Locality: this.pendingSchoolData.Locality,
-      AreaEducationCode: this.pendingSchoolData.AreaEducationCode,
-      AreaEducation: this.pendingSchoolData.AreaEducation,
-      AreaAdministrativeCode: this.pendingSchoolData.AreaAdministrativeCode,
-      AreaAdministrative: this.pendingSchoolData.AreaAdministrative,
-      // Academic fields from dialog (already converted to DD-MM-YYYY format)
-      EducationGrade: academicData.EducationGrade,
-      AcademicPeriod: academicData.AcademicPeriod,
-      StartDate: academicData.StartDate,
-      EndDate: academicData.EndDate
-    };
+      // Update only academic fields
+      this.form.patchValue({
+        EducationGrade: academicData.EducationGrade,
+        AcademicPeriod: academicData.AcademicPeriod,
+        StartDate: academicData.StartDate,
+        EndDate: academicData.EndDate
+      });
 
-    this.form.patchValue(schoolFields);
+      // Re-disable academic fields
+      this.form.get('EducationGrade')?.disable();
+      this.form.get('AcademicPeriod')?.disable();
+      this.form.get('StartDate')?.disable();
+      this.form.get('EndDate')?.disable();
+    }
 
     // Clean up
     this.showAcademicDialog.set(false);
-    this.form.get('InstitutionCode')?.disable();
-    this.pendingSchoolData = null;
   }
 
   onAcademicUpdateCancelled() {
@@ -521,6 +553,22 @@ export class AdminStudentEditorComponent implements OnInit {
     this.pendingSchoolData = null;
     // Re-disable the InstitutionCode control
     this.form.get('InstitutionCode')?.disable();
+  }
+
+  openAcademicUpdateDialog() {
+    // Pre-populate dialog with current academic values
+    this.showAcademicDialog.set(true);
+  }
+
+  getCurrentAcademicData(): AcademicUpdateData | null {
+    if (!this.formEnabled()) return null;
+
+    return {
+      EducationGrade: this.form.get('EducationGrade')?.value || '',
+      AcademicPeriod: this.form.get('AcademicPeriod')?.value || '',
+      StartDate: this.form.get('StartDate')?.value || '',
+      EndDate: this.form.get('EndDate')?.value || ''
+    };
   }
 
   onSearch(ev: Event) {
@@ -548,6 +596,39 @@ export class AdminStudentEditorComponent implements OnInit {
     return dateValue;
   }
 
+  private calculateAge(birthDate: string): number | null {
+    if (!birthDate) return null;
+
+    let parsedDate: Date;
+
+    // Handle DD-MM-YYYY format
+    if (birthDate.match(/^\d{2}-\d{2}-\d{4}$/)) {
+      const [day, month, year] = birthDate.split('-');
+      parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    // Handle YYYY-MM-DD format
+    else if (birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      parsedDate = new Date(birthDate);
+    }
+    // Handle ISO format
+    else if (birthDate.includes('T')) {
+      parsedDate = new Date(birthDate);
+    }
+    else {
+      return null;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - parsedDate.getFullYear();
+    const monthDiff = today.getMonth() - parsedDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < parsedDate.getDate())) {
+      age--;
+    }
+
+    return age >= 0 ? age : null;
+  }
+
   select(s: StudentData) {
     this.results.set([]);
     // Clear the search box
@@ -570,6 +651,12 @@ export class AdminStudentEditorComponent implements OnInit {
         }
       }
     });
+
+    // Calculate age from date of birth
+    if (formattedData.DateOfBirth) {
+      const calculatedAge = this.calculateAge(formattedData.DateOfBirth.toString());
+      formattedData.Age = calculatedAge ?? undefined;
+    }
 
     this.form.reset({ ...formattedData });
     this.formEnabled.set(true);

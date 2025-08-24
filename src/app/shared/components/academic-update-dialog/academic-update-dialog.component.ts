@@ -1,4 +1,4 @@
-import { Component, inject, signal, output } from '@angular/core';
+import { Component, inject, signal, output, input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AcademicUpdateData } from '../../../core/services/student-api.service';
@@ -130,11 +130,12 @@ import { AcademicUpdateData } from '../../../core/services/student-api.service';
     .btn-primary:disabled { background: #adb5bd; cursor: not-allowed; }
   `]
 })
-export class AcademicUpdateDialogComponent {
+export class AcademicUpdateDialogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   confirmed = output<AcademicUpdateData>();
   cancelled = output<void>();
+  currentData = input<AcademicUpdateData | null>(null); // New input for current values
 
   form = this.fb.group({
     AcademicPeriod: ['2025-2026', Validators.required], // Default to 2025-2026
@@ -142,6 +143,23 @@ export class AcademicUpdateDialogComponent {
     StartDate: ['2025-09-01', Validators.required], // Default to 01-09-2025
     EndDate: ['2026-06-01', Validators.required]     // Default to 01-06-2026
   });
+
+  ngOnInit() {
+    // Pre-populate form with current data if provided
+    const current = this.currentData();
+    if (current) {
+      // Convert DD-MM-YYYY back to YYYY-MM-DD for date inputs
+      const startDate = this.convertToInputFormat(current.StartDate);
+      const endDate = this.convertToInputFormat(current.EndDate);
+
+      this.form.patchValue({
+        AcademicPeriod: current.AcademicPeriod || '2025-2026',
+        EducationGrade: current.EducationGrade || '',
+        StartDate: startDate || '2025-09-01',
+        EndDate: endDate || '2026-06-01'
+      });
+    }
+  }
 
   onConfirm() {
     if (this.form.valid) {
@@ -164,5 +182,11 @@ export class AcademicUpdateDialogComponent {
     if (!dateValue || !dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) return dateValue;
     const [year, month, day] = dateValue.split('-');
     return `${day}-${month}-${year}`;
+  }
+
+  private convertToInputFormat(displayDate: string): string {
+    if (!displayDate || !displayDate.match(/^\d{2}-\d{2}-\d{4}$/)) return displayDate;
+    const [day, month, year] = displayDate.split('-');
+    return `${year}-${month}-${day}`;
   }
 }
