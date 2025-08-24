@@ -1,0 +1,5 @@
+{
+  "appId": "d2wwjdgjliumng",
+  "branchName": "main",
+  "buildSpec": "version: 1.0\napplications:\n  - appRoot: .\n    env:\n      variables:\n        APP_ID: d2wwjdgjliumng\n    frontend:\n      phases:\n        preBuild:\n          commands:\n            - npm ci\n            - npx ampx -v\n            - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH\n            - FN=$(aws lambda list-functions --region $AWS_REGION --query \"Functions[?contains(FunctionName, 'studentSearch')].FunctionName\" --output text)\n            - FUNCTION_URL=$(aws lambda get-function-url-config --region $AWS_REGION --function-name $FN --query \"FunctionUrl\" --output text) || true\n            - echo \"FUNCTION_URL=$FUNCTION_URL\"\n            - sed -i \"s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${FUNCTION_URL}';|\" src/index.html || true\n        build:\n          commands:\n            - npm run build\n      artifacts:\n        baseDirectory: dist/SchoolLink\n        files:\n          - '**/*'\n      cache:\n        paths:\n          - node_modules/**/*\n"
+}

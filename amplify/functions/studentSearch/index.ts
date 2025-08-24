@@ -155,10 +155,8 @@ function resp(statusCode: number, body: any) {
   return {
     statusCode,
     headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+      'Content-Type': 'application/json'
+      // Remove CORS headers - let Function URL handle CORS
     },
     body: statusCode === 204 ? '' : JSON.stringify(body),
   };

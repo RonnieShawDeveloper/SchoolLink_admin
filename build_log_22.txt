@@ -1,0 +1,137 @@
+2025-08-24T05:12:29.934Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2025-08-24T05:12:30.396Z [INFO]: # Cloning repository: git@github.com:RonnieShawDeveloper/SchoolLink_admin.git
+2025-08-24T05:12:30.973Z [INFO]: 
+2025-08-24T05:12:30.973Z [INFO]: Cloning into 'SchoolLink_admin'...
+2025-08-24T05:12:30.974Z [INFO]: # Checking for Git submodules at: /codebuild/output/src1020831237/src/SchoolLink_admin/.gitmodules
+2025-08-24T05:12:30.985Z [INFO]: # Retrieving environment cache...
+2025-08-24T05:12:31.050Z [INFO]: # Retrieved environment cache
+2025-08-24T05:12:31.050Z [INFO]: ---- Setting Up SSM Secrets ----
+2025-08-24T05:12:31.050Z [INFO]: SSM params {"Path":"/amplify/d2wwjdgjliumng/main/","WithDecryption":true}
+2025-08-24T05:12:34.772Z [INFO]: # Node version 20 is available for installation
+2025-08-24T05:12:34.894Z [INFO]: # Installing Node version 20
+2025-08-24T05:13:49.347Z [INFO]: # Now using Node version 20
+2025-08-24T05:13:49.461Z [INFO]: # Retrieving cache...
+2025-08-24T05:13:52.531Z [INFO]: # Extracting cache...
+2025-08-24T05:13:54.818Z [INFO]: # Extraction completed
+2025-08-24T05:13:54.852Z [INFO]: # Retrieved cache
+2025-08-24T05:13:58.691Z [INFO]: ## Processing Environment Variables
+                                 # Set Environment Variable: APP_ID
+2025-08-24T05:13:58.699Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+                                 {"backendDuration": 0}
+2025-08-24T05:13:58.699Z [INFO]: ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm ci
+2025-08-24T05:14:02.944Z [WARNING]: npm warn ERESOLVE overriding peer dependency
+2025-08-24T05:14:02.948Z [WARNING]: npm warn While resolving: @aws-amplify/plugin-types@1.10.1
+                                    npm warn Found: @aws-sdk/types@3.821.0
+                                    npm warn node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types/node_modules/@aws-sdk/types
+                                    npm warn
+                                    npm warn Could not resolve dependency:
+                                    npm warn peer @aws-sdk/types@"^3.734.0" from @aws-amplify/plugin-types@1.10.1
+                                    npm warn node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types
+                                    npm warn   @aws-amplify/plugin-types@"^1.10.1" from @aws-amplify/ai-constructs@1.5.3
+                                    npm warn   node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs
+2025-08-24T05:14:03.129Z [WARNING]: npm warn ERESOLVE overriding peer dependency
+2025-08-24T05:14:03.130Z [WARNING]: npm warn While resolving: @aws-amplify/plugin-types@1.10.1
+                                    npm warn Found: @aws-sdk/types@3.821.0
+                                    npm warn node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types/node_modules/@aws-sdk/types
+                                    npm warn
+                                    npm warn Could not resolve dependency:
+                                    npm warn peer @aws-sdk/types@"^3.734.0" from @aws-amplify/plugin-types@1.10.1
+                                    npm warn node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types
+                                    npm warn   @aws-amplify/plugin-types@"^1.10.1" from @aws-amplify/ai-constructs@1.5.3
+                                    npm warn   node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs
+2025-08-24T05:16:28.104Z [WARNING]: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-24T05:16:28.195Z [WARNING]: npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+2025-08-24T05:16:28.295Z [WARNING]: npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-24T05:16:28.429Z [WARNING]: npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-24T05:16:31.046Z [WARNING]: npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2025-08-24T05:16:32.322Z [WARNING]: npm warn deprecated @babel/plugin-proposal-object-rest-spread@7.20.7: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-object-rest-spread instead.
+2025-08-24T05:16:54.666Z [WARNING]: npm warn deprecated core-js@2.6.12: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
+2025-08-24T05:16:57.929Z [INFO]: added 2059 packages, and audited 2937 packages in 3m
+2025-08-24T05:16:57.935Z [INFO]: 233 packages are looking for funding
+                                 run `npm fund` for details
+                                 found 0 vulnerabilities
+2025-08-24T05:16:57.968Z [INFO]: # Executing command: npx ampx -v
+2025-08-24T05:17:08.555Z [INFO]: 1.8.0
+2025-08-24T05:17:08.586Z [INFO]: # Executing command: npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
+2025-08-24T05:17:12.395Z [INFO]: 5:17:12 AM Synthesizing backend...
+2025-08-24T05:17:12.401Z [INFO]: 
+2025-08-24T05:17:17.863Z [WARNING]: Bundling asset amplify-d2wwjdgjliumng-main-branch-9c7fa56116/AmplifyBranchLinker/CustomResourceLambda/Code/Stage...
+2025-08-24T05:17:18.343Z [WARNING]: ...75c2f6d49918e7c40e8aabea1a1064621f402160e1bbb2-building/index.js  991.4kb
+                                    ⚡ Done in 117ms
+2025-08-24T05:17:18.506Z [WARNING]: [WARNING] aws-cdk-lib.aws_lambda.FunctionOptions#logRetention is deprecated.
+                                    use `logGroup` instead
+                                    This API will be removed in the next major release.
+2025-08-24T05:17:18.507Z [WARNING]: [WARNING] aws-cdk-lib.aws_lambda.FunctionOptions#logRetention is deprecated.
+                                    use `logGroup` instead
+                                    This API will be removed in the next major release.
+2025-08-24T05:17:18.509Z [WARNING]: Bundling asset amplify-d2wwjdgjliumng-main-branch-9c7fa56116/function/studentSearch-lambda/Code/Stage...
+2025-08-24T05:17:19.311Z [INFO]: 5:17:19 AM ✔ Backend synthesized in 6.92 seconds
+2025-08-24T05:17:19.312Z [INFO]: 5:17:19 AM Running type checks...
+2025-08-24T05:17:32.629Z [INFO]: 5:17:32 AM ✔ Type checks completed in 13.31 seconds
+2025-08-24T05:17:32.637Z [INFO]: 5:17:32 AM Building and publishing assets...
+2025-08-24T05:17:32.637Z [INFO]: 
+2025-08-24T05:17:33.828Z [INFO]: 5:17:33 AM ✔ Built and published assets
+2025-08-24T05:17:36.575Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:34 AM | CREATE_IN_PROGRESS | AWS::CloudFormation::Stack | amplify-d2wwjdgjliumng-main-branch-9c7fa56116 User Initiated
+2025-08-24T05:17:38.630Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:37 AM | CREATE_IN_PROGRESS | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata)
+2025-08-24T05:17:38.632Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:37 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceLambda/ServiceRole (AmplifyBranchLinkerCustomResourceLambdaServiceRole3DDCBC03)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:37 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRole92A035EB)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:37 AM | CREATE_IN_PROGRESS | AWS::CloudFormation::Stack | function.NestedStack/function.NestedStackResource (function1351588B)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:37 AM | CREATE_IN_PROGRESS | AWS::CloudFormation::Stack | function.NestedStack/function.NestedStackResource (function1351588B) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:38 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRole92A035EB) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:38 AM | CREATE_IN_PROGRESS | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   0 | 5:17:38 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceLambda/ServiceRole (AmplifyBranchLinkerCustomResourceLambdaServiceRole3DDCBC03) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   1 | 5:17:38 AM | CREATE_COMPLETE | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata)
+2025-08-24T05:17:40.678Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   1 | 5:17:40 AM | CREATE_IN_PROGRESS | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata)
+2025-08-24T05:17:40.683Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   1 | 5:17:40 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | function/studentSearch-lambda/ServiceRole (studentSearchlambdaServiceRoleF0263FD5)
+2025-08-24T05:17:42.735Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   1 | 5:17:41 AM | CREATE_IN_PROGRESS | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata) Resource creation Initiated
+2025-08-24T05:17:42.735Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   1 | 5:17:41 AM | CREATE_IN_PROGRESS | AWS::IAM::Role | function/studentSearch-lambda/ServiceRole (studentSearchlambdaServiceRoleF0263FD5) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   0 | 5:17:41 AM | CREATE_COMPLETE | AWS::CDK::Metadata | function/CDKMetadata/Default (CDKMetadata)
+2025-08-24T05:17:55.120Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   1 | 5:17:54 AM | CREATE_COMPLETE | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRole92A035EB)
+2025-08-24T05:17:55.126Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   2 | 5:17:54 AM | CREATE_COMPLETE | AWS::IAM::Role | AmplifyBranchLinker/CustomResourceLambda/ServiceRole (AmplifyBranchLinkerCustomResourceLambdaServiceRole3DDCBC03)
+2025-08-24T05:17:57.190Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   2 | 5:17:55 AM | CREATE_IN_PROGRESS | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceLambda/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceLambdaServiceRoleDefaultPolicy86099CA1)
+2025-08-24T05:17:57.191Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   2 | 5:17:55 AM | CREATE_IN_PROGRESS | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceLambda/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceLambdaServiceRoleDefaultPolicy86099CA1) Resource creation Initiated
+2025-08-24T05:17:59.252Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   3 | 5:17:57 AM | CREATE_COMPLETE | AWS::IAM::Role | function/studentSearch-lambda/ServiceRole (studentSearchlambdaServiceRoleF0263FD5)
+2025-08-24T05:17:59.256Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   3 | 5:17:58 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | function/studentSearch-lambda (studentSearchlambda2836B821)
+2025-08-24T05:18:01.311Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   3 | 5:18:00 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | function/studentSearch-lambda (studentSearchlambda2836B821) Resource creation Initiated
+2025-08-24T05:18:07.480Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   4 | 5:18:06 AM | CREATE_COMPLETE | AWS::Lambda::Function | function/studentSearch-lambda (studentSearchlambda2836B821)
+2025-08-24T05:18:07.485Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   4 | 5:18:06 AM | CREATE_IN_PROGRESS | AWS::Lambda::Permission | function/studentSearch-lambda/invoke-function-url (studentSearchlambdainvokefunctionurlA1F8CD8A)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   4 | 5:18:06 AM | CREATE_IN_PROGRESS | AWS::Lambda::Url | function/studentSearch-lambda/FunctionUrl (studentSearchlambdaFunctionUrl37751B1A)
+2025-08-24T05:18:09.530Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   4 | 5:18:07 AM | CREATE_IN_PROGRESS | AWS::Lambda::Permission | function/studentSearch-lambda/invoke-function-url (studentSearchlambdainvokefunctionurlA1F8CD8A) Resource creation Initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   4 | 5:18:08 AM | CREATE_IN_PROGRESS | AWS::Lambda::Url | function/studentSearch-lambda/FunctionUrl (studentSearchlambdaFunctionUrl37751B1A) Resource creation Initiated
+2025-08-24T05:18:09.531Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   5 | 5:18:08 AM | CREATE_COMPLETE | AWS::Lambda::Permission | function/studentSearch-lambda/invoke-function-url (studentSearchlambdainvokefunctionurlA1F8CD8A)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   6 | 5:18:08 AM | CREATE_COMPLETE | AWS::Lambda::Url | function/studentSearch-lambda/FunctionUrl (studentSearchlambdaFunctionUrl37751B1A)
+2025-08-24T05:18:11.588Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK |   7 | 5:18:09 AM | CREATE_COMPLETE | AWS::CloudFormation::Stack | amplify-d2wwjdgjliumng-main-branch-9c7fa56116-function1351588B-1JLHT95BM4BK
+2025-08-24T05:18:11.593Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   8 | 5:18:11 AM | CREATE_COMPLETE | AWS::CloudFormation::Stack | function.NestedStack/function.NestedStackResource (function1351588B)
+2025-08-24T05:18:13.620Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:11 AM | CREATE_COMPLETE | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceLambda/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceLambdaServiceRoleDefaultPolicy86099CA1)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:12 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceLambda (AmplifyBranchLinkerCustomResourceLambda582AC093)
+2025-08-24T05:18:13.620Z [INFO]: 
+2025-08-24T05:18:15.659Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:14 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceLambda (AmplifyBranchLinkerCustomResourceLambda582AC093) Resource creation Initiated
+2025-08-24T05:18:15.663Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:14 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceLambda (AmplifyBranchLinkerCustomResourceLambda582AC093) Eventual consistency check initiated
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:15 AM | CREATE_IN_PROGRESS | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRoleDefaultPolicy38AAE412)
+2025-08-24T05:18:17.698Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |   9 | 5:18:16 AM | CREATE_IN_PROGRESS | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRoleDefaultPolicy38AAE412) Resource creation Initiated
+2025-08-24T05:18:21.774Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  10 | 5:18:20 AM | CREATE_COMPLETE | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceLambda (AmplifyBranchLinkerCustomResourceLambda582AC093)
+2025-08-24T05:18:31.977Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  11 | 5:18:31 AM | CREATE_COMPLETE | AWS::IAM::Policy | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent/ServiceRole/DefaultPolicy (AmplifyBranchLinkerCustomResourceProviderframeworkonEventServiceRoleDefaultPolicy38AAE412)
+2025-08-24T05:18:34.024Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  11 | 5:18:32 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent (AmplifyBranchLinkerCustomResourceProviderframeworkonEvent3B23F900)
+2025-08-24T05:18:36.071Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  11 | 5:18:34 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent (AmplifyBranchLinkerCustomResourceProviderframeworkonEvent3B23F900) Resource creation Initiated
+2025-08-24T05:18:36.075Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  11 | 5:18:35 AM | CREATE_IN_PROGRESS | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent (AmplifyBranchLinkerCustomResourceProviderframeworkonEvent3B23F900) Eventual consistency check initiated
+2025-08-24T05:18:42.192Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  12 | 5:18:40 AM | CREATE_COMPLETE | AWS::Lambda::Function | AmplifyBranchLinker/CustomResourceProvider/framework-onEvent (AmplifyBranchLinkerCustomResourceProviderframeworkonEvent3B23F900)
+2025-08-24T05:18:42.197Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  12 | 5:18:41 AM | CREATE_IN_PROGRESS | Custom::AmplifyBranchLinkerResource | AmplifyBranchLinker/CustomResource/Default (AmplifyBranchLinkerCustomResource96E36FC1)
+2025-08-24T05:18:48.323Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  12 | 5:18:46 AM | CREATE_IN_PROGRESS | Custom::AmplifyBranchLinkerResource | AmplifyBranchLinker/CustomResource/Default (AmplifyBranchLinkerCustomResource96E36FC1) Resource creation Initiated
+2025-08-24T05:18:48.327Z [INFO]: amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  13 | 5:18:46 AM | CREATE_COMPLETE | Custom::AmplifyBranchLinkerResource | AmplifyBranchLinker/CustomResource/Default (AmplifyBranchLinkerCustomResource96E36FC1)
+                                 amplify-d2wwjdgjliumng-main-branch-9c7fa56116 |  14 | 5:18:47 AM | CREATE_COMPLETE | AWS::CloudFormation::Stack | amplify-d2wwjdgjliumng-main-branch-9c7fa56116
+2025-08-24T05:18:50.162Z [INFO]: 5:18:50 AM ✔ Deployment completed in 76.334 seconds
+2025-08-24T05:18:50.401Z [INFO]: 5:18:50 AM File written: amplify_outputs.json
+2025-08-24T05:18:50.815Z [INFO]: # Executing command: FN=$(aws lambda list-functions --region $AWS_REGION --query "Functions[?contains(FunctionName, 'studentSearch')].FunctionName" --output text)
+2025-08-24T05:19:10.170Z [WARNING]: An error occurred (AccessDeniedException) when calling the ListFunctions operation: User: arn:aws:sts::654654446418:assumed-role/AmplifyServiceRole-SchoolLink/BuildSession is not authorized to perform: lambda:ListFunctions on resource: * because no identity-based policy allows the lambda:ListFunctions action
+2025-08-24T05:19:10.291Z [ERROR]: !!! Build failed
+2025-08-24T05:19:10.292Z [ERROR]: !!! Error: Command failed with exit code 255
+2025-08-24T05:19:10.292Z [INFO]: # Starting environment caching...
+2025-08-24T05:19:10.292Z [INFO]: # Uploading environment cache artifact...
+2025-08-24T05:19:10.387Z [INFO]: # Uploaded environment cache artifact
+2025-08-24T05:19:10.388Z [INFO]: # Environment caching completed
+

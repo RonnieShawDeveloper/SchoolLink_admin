@@ -1,0 +1,151 @@
+2025-08-24T03:27:06.077Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2025-08-24T03:27:06.560Z [INFO]: # Cloning repository: git@github.com:RonnieShawDeveloper/SchoolLink_admin.git
+2025-08-24T03:27:07.198Z [INFO]: 
+2025-08-24T03:27:07.198Z [INFO]: Cloning into 'SchoolLink_admin'...
+2025-08-24T03:27:07.199Z [INFO]: # Switching to commit: ee4ee78259f4f222b4d4b6f420afefa6d15da16e
+2025-08-24T03:27:07.220Z [INFO]: Note: switching to 'ee4ee78259f4f222b4d4b6f420afefa6d15da16e'.
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+                                 changes and commit them, and you can discard any commits you make in this
+                                 state without impacting any branches by switching back to a branch.
+                                 If you want to create a new branch to retain commits you create, you may
+                                 do so (now or later) by using -c with the switch command. Example:
+                                 git switch -c <new-branch-name>
+                                 Or undo this operation with:
+                                 git switch -
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+                                 HEAD is now at ee4ee78 ci(amplify): update buildspec to make function URL retrieval non-fatal; add branch config for Amplify
+2025-08-24T03:27:07.326Z [INFO]: Successfully cleaned up Git credentials
+2025-08-24T03:27:07.326Z [INFO]: # Checking for Git submodules at: /codebuild/output/src3549768690/src/SchoolLink_admin/.gitmodules
+2025-08-24T03:27:07.336Z [INFO]: # Retrieving environment cache...
+2025-08-24T03:27:07.453Z [INFO]: # Retrieved environment cache
+2025-08-24T03:27:07.454Z [INFO]: ---- Setting Up SSM Secrets ----
+2025-08-24T03:27:07.454Z [INFO]: SSM params {"Path":"/amplify/d2wwjdgjliumng/main/","WithDecryption":true}
+2025-08-24T03:27:10.947Z [INFO]: # Node version 20 is available for installation
+2025-08-24T03:27:11.048Z [INFO]: # Installing Node version 20
+2025-08-24T03:28:23.698Z [INFO]: # Now using Node version 20
+2025-08-24T03:28:23.809Z [INFO]: # Retrieving cache...
+2025-08-24T03:28:26.720Z [INFO]: # Extracting cache...
+2025-08-24T03:28:28.414Z [INFO]: # Extraction completed
+2025-08-24T03:28:28.565Z [INFO]: # Retrieved cache
+2025-08-24T03:28:31.814Z [INFO]: ## Processing Environment Variables
+                                 # Set Environment Variable: APP_ID
+2025-08-24T03:28:31.818Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+                                 {"backendDuration": 0}
+2025-08-24T03:28:31.819Z [INFO]: ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: echo "Writing fixed amplify/backend.ts"
+                                 Writing fixed amplify/backend.ts
+2025-08-24T03:28:31.819Z [INFO]: # Executing command: cat > amplify/backend.ts << 'EOF'
+                                 import { defineBackend, defineFunction } from '@aws-amplify/backend';
+                                 import * as lambda from 'aws-cdk-lib/aws-lambda';
+                                 const studentSearchFn = defineFunction({
+                                 name: 'studentSearch',
+                                 runtime: 20,
+                                 entry: './functions/studentSearch/index.ts',
+                                 environment: {
+                                 DB_HOST: process.env.DB_HOST || '',
+                                 DB_PORT: process.env.DB_PORT || '3306',
+                                 DB_USER: process.env.DB_USER || '',
+                                 DB_PASSWORD: process.env.DB_PASSWORD || '',
+                                 DB_NAME: process.env.DB_NAME || '',
+                                 DB_SSL: process.env.DB_SSL || 'true',
+                                 DB_CHARSET: process.env.DB_CHARSET || 'utf8mb4',
+                                 },
+                                 });
+                                 export const backend = defineBackend({
+                                 studentSearchFn,
+                                 });
+                                 backend.studentSearchFn.resources.lambda.addFunctionUrl({
+                                 authType: lambda.FunctionUrlAuthType.NONE,
+                                 cors: {
+                                 allowedOrigins: ['*'],
+                                 allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST, lambda.HttpMethod.OPTIONS],
+                                 allowedHeaders: ['*'],
+                                 },
+                                 });
+                                 EOF
+2025-08-24T03:28:31.821Z [INFO]: # Executing command: npm ci
+2025-08-24T03:28:35.061Z [WARNING]: npm warn ERESOLVE overriding peer dependency
+2025-08-24T03:28:35.065Z [WARNING]: npm warn While resolving: @aws-amplify/plugin-types@1.10.1
+                                    npm warn Found: @aws-sdk/types@3.821.0
+                                    npm warn node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types/node_modules/@aws-sdk/types
+                                    npm warn
+                                    npm warn Could not resolve dependency:
+                                    npm warn peer @aws-sdk/types@"^3.734.0" from @aws-amplify/plugin-types@1.10.1
+                                    npm warn node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types
+                                    npm warn   @aws-amplify/plugin-types@"^1.10.1" from @aws-amplify/ai-constructs@1.5.3
+                                    npm warn   node_modules/@aws-amplify/data-construct/node_modules/@aws-amplify/ai-constructs
+2025-08-24T03:28:35.215Z [WARNING]: npm warn ERESOLVE overriding peer dependency
+2025-08-24T03:28:35.216Z [WARNING]: npm warn While resolving: @aws-amplify/plugin-types@1.10.1
+                                    npm warn Found: @aws-sdk/types@3.821.0
+                                    npm warn node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types/node_modules/@aws-sdk/types
+                                    npm warn
+                                    npm warn Could not resolve dependency:
+                                    npm warn peer @aws-sdk/types@"^3.734.0" from @aws-amplify/plugin-types@1.10.1
+                                    npm warn node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs/node_modules/@aws-amplify/plugin-types
+                                    npm warn   @aws-amplify/plugin-types@"^1.10.1" from @aws-amplify/ai-constructs@1.5.3
+                                    npm warn   node_modules/@aws-amplify/graphql-api-construct/node_modules/@aws-amplify/ai-constructs
+2025-08-24T03:29:57.131Z [WARNING]: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-24T03:29:57.213Z [WARNING]: npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+2025-08-24T03:29:57.312Z [WARNING]: npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-24T03:29:57.431Z [WARNING]: npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-24T03:29:59.327Z [WARNING]: npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2025-08-24T03:30:00.623Z [WARNING]: npm warn deprecated @babel/plugin-proposal-object-rest-spread@7.20.7: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-object-rest-spread instead.
+2025-08-24T03:30:18.633Z [WARNING]: npm warn deprecated core-js@2.6.12: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
+2025-08-24T03:30:21.349Z [INFO]: added 2059 packages, and audited 2937 packages in 2m
+2025-08-24T03:30:21.350Z [INFO]: 233 packages are looking for funding
+                                 run `npm fund` for details
+2025-08-24T03:30:21.352Z [INFO]: found 0 vulnerabilities
+2025-08-24T03:30:21.383Z [INFO]: # Executing command: npx ampx -v
+2025-08-24T03:30:29.109Z [INFO]: 1.8.0
+2025-08-24T03:30:29.136Z [INFO]: # Executing command: npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
+2025-08-24T03:30:32.718Z [INFO]: 3:30:32 AM Synthesizing backend...
+2025-08-24T03:30:32.723Z [INFO]: 
+2025-08-24T03:30:35.190Z [WARNING]: Bundling asset amplify-d2wwjdgjliumng-main-branch-9c7fa56116/AmplifyBranchLinker/CustomResourceLambda/Code/Stage...
+2025-08-24T03:30:35.564Z [WARNING]: ...7ac0629ce0010a9517cc10426b929f3ef67cb813034dfd-building/index.js  991.4kb
+                                    ⚡ Done in 72ms
+2025-08-24T03:30:35.679Z [WARNING]: [WARNING] aws-cdk-lib.aws_lambda.FunctionOptions#logRetention is deprecated.
+                                    use `logGroup` instead
+                                    This API will be removed in the next major release.
+2025-08-24T03:30:35.680Z [WARNING]: [WARNING] aws-cdk-lib.aws_lambda.FunctionOptions#logRetention is deprecated.
+                                    use `logGroup` instead
+                                    This API will be removed in the next major release.
+2025-08-24T03:30:35.681Z [WARNING]: Bundling asset amplify-d2wwjdgjliumng-main-branch-9c7fa56116/function/studentSearch-lambda/Code/Stage...
+2025-08-24T03:30:36.268Z [INFO]: 3:30:36 AM ✔ Backend synthesized in 3.56 seconds
+2025-08-24T03:30:36.274Z [INFO]: 3:30:36 AM Running type checks...
+2025-08-24T03:30:48.243Z [INFO]: 3:30:48 AM ✔ Type checks completed in 11.97 seconds
+2025-08-24T03:30:48.249Z [INFO]: 3:30:48 AM Building and publishing assets...
+2025-08-24T03:30:48.250Z [INFO]: 
+2025-08-24T03:30:48.664Z [INFO]: 
+2025-08-24T03:30:48.664Z [INFO]: [BootstrapDetectionError] Unable to detect CDK bootstrap stack due to permission issues.
+                                 ∟ Caused by: [ToolkitError] amplify-d2wwjdgjliumng-main-branch-9c7fa56116: This CDK deployment requires bootstrap stack version '6', but during the confirmation via SSM parameter /cdk-bootstrap/hnb659fds/version the following error occurred: AccessDeniedException: User: arn:aws:sts::654654446418:assumed-role/AmplifyServiceRole-SchoolLink/BuildSession is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:us-east-1:654654446418:parameter/cdk-bootstrap/hnb659fds/version because no identity-based policy allows the ssm:GetParameter action
+                                 Resolution: Ensure that AWS credentials have an IAM policy that grants read access to 'arn:aws:ssm:*:*:parameter/cdk-bootstrap/*' SSM parameters.
+2025-08-24T03:30:48.664Z [WARNING]: ampx pipeline-deploy
+                                    Command to deploy backends in a custom CI/CD pipeline. This command is not inten
+                                    ded to be used locally.
+                                    Options:
+                                    --debug            Print debug logs to the console
+                                    [boolean] [default: false]
+                                    --branch           Name of the git branch being deployed
+                                    [string] [required]
+                                    --app-id           The app id of the target Amplify app[string] [required]
+                                    --outputs-out-dir  A path to directory where amplify_outputs is written. I
+                                    f not provided defaults to current process working dire
+                                    ctory.                                         [string]
+                                    --outputs-version  Version of the configuration. Version 0 represents clas
+                                    sic amplify-cli config file amplify-configuration and 1
+                                    represents newer config file amplify_outputs
+                                    [string] [choices: "0", "1", "1.1", "1.2", "1.3", "1.4"] [default: "1.4"]
+                                    --outputs-format   amplify_outputs file format
+                                    [string] [choices: "mjs", "json", "json-mobile", "ts", "dart"]
+                                    -h, --help             Show help                                     [boolean]
+2025-08-24T03:30:48.734Z [ERROR]: !!! Build failed
+2025-08-24T03:30:48.734Z [ERROR]: !!! Error: Command failed with exit code 1
+2025-08-24T03:30:48.734Z [INFO]: # Starting environment caching...
+2025-08-24T03:30:48.734Z [INFO]: # Uploading environment cache artifact...
+2025-08-24T03:30:48.847Z [INFO]: # Uploaded environment cache artifact
+2025-08-24T03:30:48.847Z [INFO]: # Environment caching completed
+

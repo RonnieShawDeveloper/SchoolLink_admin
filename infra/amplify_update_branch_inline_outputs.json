@@ -1,0 +1,5 @@
+{
+  "appId": "d2wwjdgjliumng",
+  "branchName": "main",
+  "buildSpec": "version: 1.0\napplications:\n  - appRoot: .\n    env:\n      variables:\n        APP_ID: d2wwjdgjliumng\n    frontend:\n      phases:\n        preBuild:\n          commands:\n            - npm ci\n            - npx ampx -v\n            - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH\n            - node -e \"const fs=require('fs');const p=JSON.parse(fs.readFileSync('amplify_outputs.json','utf8'));const url=(p.custom&&p.custom.STUDENT_API_BASE)||'';console.log('FUNCTION_URL='+url);fs.writeFileSync('function_url.txt',url);\" || true\n            - FUNCTION_URL=$(cat function_url.txt 2>/dev/null || true)\n            - echo \"FUNCTION_URL=$FUNCTION_URL\"\n            - sed -i \"s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${FUNCTION_URL}';|\" src/index.html || true\n        build:\n          commands:\n            - npm run build\n      artifacts:\n        baseDirectory: dist/SchoolLink\n        files:\n          - '**/*'\n      cache:\n        paths:\n          - node_modules/**/*\n"
+}

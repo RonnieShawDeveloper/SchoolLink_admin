@@ -11,8 +11,7 @@ applications:
             - npm ci
             - npx ampx -v
             - npx ampx pipeline-deploy --app-id $APP_ID --branch $AWS_BRANCH
-            - node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('amplify_outputs.json','utf8'));const url=(p.custom&&p.custom.STUDENT_API_BASE)||'';console.log('FUNCTION_URL='+url);fs.writeFileSync('function_url.txt',url);" || true
-            - FUNCTION_URL=$(cat function_url.txt 2>/dev/null || true)
+            - FUNCTION_URL=$(node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('amplify_outputs.json','utf8'));const url=(p.custom&&p.custom.STUDENT_API_BASE)||'';console.log(url.replace(/\/$/, ''));" || echo "")
             - echo "FUNCTION_URL=$FUNCTION_URL"
             - sed -i "s|window.STUDENT_API_BASE.*|window.STUDENT_API_BASE = '${FUNCTION_URL}';|" src/index.html || true
         build:
