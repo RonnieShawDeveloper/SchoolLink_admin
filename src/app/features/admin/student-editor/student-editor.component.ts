@@ -32,20 +32,31 @@ import { Subject, of } from 'rxjs';
       <!-- Search (full width) -->
       <div class="app-card search-card">
         <h3 style="margin:0 0 8px 0;">Find Student</h3>
-        <div style="font-size:0.85rem; color: var(--bah-text-muted); margin-bottom:6px;">Student, Parent, Guardian or Student ID</div>
-        <input type="text" class="app-input" placeholder="Type 3+ characters" (input)="onSearch($event)" />
-        <div *ngIf="searching()" style="margin-top:8px; color: var(--bah-text-muted);">Searching…</div>
-      <div *ngIf="results().length" style="margin-top:8px; max-height:240px; overflow:auto; border-top:1px solid var(--bah-border);">
+        <div style="font-size:0.85rem; color: var(--bah-text-muted); margin-bottom:6px;">Student,
+          Parent, Guardian or Student ID
+        </div>
+        <input type="text" class="app-input" placeholder="Type 3+ characters"
+               (input)="onSearch($event)"/>
+        <div *ngIf="searching()" style="margin-top:8px; color: var(--bah-text-muted);">Searching…
+        </div>
+        <div *ngIf="results().length"
+             style="margin-top:8px; max-height:240px; overflow:auto; border-top:1px solid var(--bah-border);">
           <div *ngFor="let s of results()" (click)="select(s)"
                style="padding:8px; border-bottom:1px solid var(--bah-border); cursor:pointer; display:flex; justify-content:space-between;">
             <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               <div style="font-weight:600;">{{ s.StudentName || '—' }}</div>
-              <div style="font-size:0.85rem; color: var(--bah-text-muted);">DOB: {{ formatDateForDisplay(s.DateOfBirth) || '—' }}</div>
+              <div style="font-size:0.85rem; color: var(--bah-text-muted);">
+                DOB: {{ formatDateForDisplay(s.DateOfBirth) || '—' }}
+              </div>
             </div>
-            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</div>
+            <div
+              style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}
+            </div>
           </div>
         </div>
-        <div *ngIf="!results().length && lastQuery && !searching()" style="margin-top:8px; color: var(--bah-text-muted);">No matches.</div>
+        <div *ngIf="!results().length && lastQuery && !searching()"
+             style="margin-top:8px; color: var(--bah-text-muted);">No matches.
+        </div>
         <div style="margin-top:12px; display:flex; gap:8px;">
           <button class="btn-primary" (click)="newStudent()">New Student</button>
           <button class="btn-primary" [disabled]="!formEnabled()" (click)="save()">Save</button>
@@ -58,21 +69,42 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Student Personal</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">SchoolLink ID</label><input class="app-input" formControlName="StudentID" type="number" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Student OpenEMIS ID</label><input class="app-input" formControlName="StudentOpenEMIS_ID" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Student Name</label><input class="app-input" formControlName="StudentName" /></div>
-            <div class="field"><label class="field-label">Student Status</label><input class="app-input" formControlName="StudentStatus" /></div>
-            <div class="field"><label class="field-label">Gender</label><input class="app-input" formControlName="Gender" /></div>
-            <div class="field"><label class="field-label">Date Of Birth (DD-MM-YYYY)</label><input class="app-input" formControlName="DateOfBirth" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Age</label><input class="app-input" formControlName="Age" type="number" /></div>
-            <div class="field"><label class="field-label">Preferred Nationality</label><input class="app-input" formControlName="PreferredNationality" /></div>
-            <div class="field"><label class="field-label">All Nationalities</label><input class="app-input" formControlName="AllNationalities" /></div>
-            <div class="field"><label class="field-label">Default Identity Type</label><input class="app-input" formControlName="DefaultIdentitytype" /></div>
-            <div class="field"><label class="field-label">Identity Number</label><input class="app-input" formControlName="IdentityNumber" /></div>
-            <div class="field"><label class="field-label">Risk Index</label><input class="app-input" formControlName="RiskIndex" /></div>
-            <div class="field" style="grid-column:1 / -1;"><label class="field-label">Address</label><input class="app-input" formControlName="Address" /></div>
-            <div class="field"><label class="field-label">NIB2</label><input class="app-input" formControlName="NIB2" /></div>
-            <div class="field" style="grid-column:1 / -1;"><label class="field-label">Extra Activities</label><textarea class="app-input" formControlName="ExtraActivities" rows="2"></textarea></div>
+            <div class="field"><label class="field-label">SchoolLink ID</label><input
+              class="app-input" formControlName="StudentID" type="number" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Student OpenEMIS ID</label><input
+              class="app-input" formControlName="StudentOpenEMIS_ID" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Student Name</label><input
+              class="app-input" formControlName="StudentName"/></div>
+            <div class="field"><label class="field-label">Student Status</label><input
+              class="app-input" formControlName="StudentStatus"/></div>
+            <div class="field"><label class="field-label">Gender</label><input class="app-input"
+                                                                               formControlName="Gender"/>
+            </div>
+            <div class="field"><label class="field-label">Date Of Birth (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="DateOfBirth" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Age</label><input class="app-input"
+                                                                            formControlName="Age"
+                                                                            type="number"/></div>
+            <div class="field"><label class="field-label">Preferred Nationality</label><input
+              class="app-input" formControlName="PreferredNationality"/></div>
+            <div class="field"><label class="field-label">All Nationalities</label><input
+              class="app-input" formControlName="AllNationalities"/></div>
+            <div class="field"><label class="field-label">Default Identity Type</label><input
+              class="app-input" formControlName="DefaultIdentitytype"/></div>
+            <div class="field"><label class="field-label">Identity Number</label><input
+              class="app-input" formControlName="IdentityNumber"/></div>
+            <div class="field"><label class="field-label">Risk Index</label><input class="app-input"
+                                                                                   formControlName="RiskIndex"/>
+            </div>
+            <div class="field" style="grid-column:1 / -1;"><label
+              class="field-label">Address</label><input class="app-input"
+                                                        formControlName="Address"/></div>
+            <div class="field"><label class="field-label">NIB2</label><input class="app-input"
+                                                                             formControlName="NIB2"/>
+            </div>
+            <div class="field" style="grid-column:1 / -1;"><label class="field-label">Extra
+              Activities</label><textarea class="app-input" formControlName="ExtraActivities"
+                                          rows="2"></textarea></div>
           </div>
         </section>
 
@@ -80,17 +112,38 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Institution & Location</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Institution Code</label><input class="app-input" formControlName="InstitutionCode" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Institution Name</label><input class="app-input" formControlName="InstitutionName" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Ownership</label><input class="app-input" formControlName="Ownewship" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Type</label><input class="app-input" formControlName="Type" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Sector</label><input class="app-input" formControlName="Sector" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Provider</label><input class="app-input" formControlName="Provider" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Locality</label><input class="app-input" formControlName="Locality" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Area Education Code</label><input class="app-input" formControlName="AreaEducationCode" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Area Education</label><input class="app-input" formControlName="AreaEducation" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Area Administrative Code</label><input class="app-input" formControlName="AreaAdministrativeCode" [disabled]="true" /></div>
-            <div class="field"><label class="field-label">Area Administrative</label><input class="app-input" formControlName="AreaAdministrative" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Institution Code</label><input
+              class="app-input" formControlName="InstitutionCode" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Institution Name</label><input
+              class="app-input" formControlName="InstitutionName" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Ownership</label><input class="app-input"
+                                                                                  formControlName="Ownewship"
+                                                                                  [disabled]="true"/>
+            </div>
+            <div class="field"><label class="field-label">Type</label><input class="app-input"
+                                                                             formControlName="Type"
+                                                                             [disabled]="true"/>
+            </div>
+            <div class="field"><label class="field-label">Sector</label><input class="app-input"
+                                                                               formControlName="Sector"
+                                                                               [disabled]="true"/>
+            </div>
+            <div class="field"><label class="field-label">Provider</label><input class="app-input"
+                                                                                 formControlName="Provider"
+                                                                                 [disabled]="true"/>
+            </div>
+            <div class="field"><label class="field-label">Locality</label><input class="app-input"
+                                                                                 formControlName="Locality"
+                                                                                 [disabled]="true"/>
+            </div>
+            <div class="field"><label class="field-label">Area Education Code</label><input
+              class="app-input" formControlName="AreaEducationCode" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Area Education</label><input
+              class="app-input" formControlName="AreaEducation" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Area Administrative Code</label><input
+              class="app-input" formControlName="AreaAdministrativeCode" [disabled]="true"/></div>
+            <div class="field"><label class="field-label">Area Administrative</label><input
+              class="app-input" formControlName="AreaAdministrative" [disabled]="true"/></div>
           </div>
         </section>
 
@@ -98,13 +151,21 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Academic</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Education Grade</label><input class="app-input" formControlName="EducationGrade" /></div>
-            <div class="field"><label class="field-label">Academic Period</label><input class="app-input" formControlName="AcademicPeriod" /></div>
-            <div class="field"><label class="field-label">Start Date (DD-MM-YYYY)</label><input class="app-input" formControlName="StartDate" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">End Date (DD-MM-YYYY)</label><input class="app-input" formControlName="EndDate" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Class Name</label><input class="app-input" formControlName="ClassName" /></div>
-            <div class="field"><label class="field-label">Last Grade Level Enrolled</label><input class="app-input" formControlName="LastGradeLevelEnrolled" /></div>
-            <div class="field" style="grid-column:1 / -1;"><label class="field-label">Previous School</label><input class="app-input" formControlName="PreviousSchool" /></div>
+            <div class="field"><label class="field-label">Education Grade</label><input
+              class="app-input" formControlName="EducationGrade"/></div>
+            <div class="field"><label class="field-label">Academic Period</label><input
+              class="app-input" formControlName="AcademicPeriod"/></div>
+            <div class="field"><label class="field-label">Start Date (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="StartDate" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">End Date (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="EndDate" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Class Name</label><input class="app-input"
+                                                                                   formControlName="ClassName"/>
+            </div>
+            <div class="field"><label class="field-label">Last Grade Level Enrolled</label><input
+              class="app-input" formControlName="LastGradeLevelEnrolled"/></div>
+            <div class="field" style="grid-column:1 / -1;"><label class="field-label">Previous
+              School</label><input class="app-input" formControlName="PreviousSchool"/></div>
           </div>
         </section>
 
@@ -112,17 +173,28 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Mother</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Mother OpenEMIS ID</label><input class="app-input" formControlName="MotherOpenEMIS_ID" /></div>
-            <div class="field"><label class="field-label">Mother Name</label><input class="app-input" formControlName="MotherName" /></div>
-            <div class="field"><label class="field-label">Mother Contact</label><input class="app-input" formControlName="MotherContact" /></div>
-            <div class="field"><label class="field-label">Mother First Name</label><input class="app-input" formControlName="MotherFirstName" /></div>
-            <div class="field"><label class="field-label">Mother Last Name</label><input class="app-input" formControlName="MotherLastName" /></div>
-            <div class="field"><label class="field-label">Mother Address</label><input class="app-input" formControlName="MotherAddress" /></div>
-            <div class="field"><label class="field-label">Mother Telephone</label><input class="app-input" formControlName="MotherTelephone" /></div>
-            <div class="field"><label class="field-label">Mother Email</label><input class="app-input" formControlName="MotherEmail" /></div>
-            <div class="field"><label class="field-label">Mother DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="MotherDOB" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Mother Is Deceased</label><input class="app-input" formControlName="MotherIsDeceased" /></div>
-            <div class="field"><label class="field-label">Mother Nationality</label><input class="app-input" formControlName="MotherNationality" /></div>
+            <div class="field"><label class="field-label">Mother OpenEMIS ID</label><input
+              class="app-input" formControlName="MotherOpenEMIS_ID"/></div>
+            <div class="field"><label class="field-label">Mother Name</label><input
+              class="app-input" formControlName="MotherName"/></div>
+            <div class="field"><label class="field-label">Mother Contact</label><input
+              class="app-input" formControlName="MotherContact"/></div>
+            <div class="field"><label class="field-label">Mother First Name</label><input
+              class="app-input" formControlName="MotherFirstName"/></div>
+            <div class="field"><label class="field-label">Mother Last Name</label><input
+              class="app-input" formControlName="MotherLastName"/></div>
+            <div class="field"><label class="field-label">Mother Address</label><input
+              class="app-input" formControlName="MotherAddress"/></div>
+            <div class="field"><label class="field-label">Mother Telephone</label><input
+              class="app-input" formControlName="MotherTelephone"/></div>
+            <div class="field"><label class="field-label">Mother Email</label><input
+              class="app-input" formControlName="MotherEmail"/></div>
+            <div class="field"><label class="field-label">Mother DOB (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="MotherDOB" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Mother Is Deceased</label><input
+              class="app-input" formControlName="MotherIsDeceased"/></div>
+            <div class="field"><label class="field-label">Mother Nationality</label><input
+              class="app-input" formControlName="MotherNationality"/></div>
           </div>
         </section>
 
@@ -130,17 +202,28 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Father</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Father OpenEMIS ID</label><input class="app-input" formControlName="FatherOpenEMIS_ID" /></div>
-            <div class="field"><label class="field-label">Father Name</label><input class="app-input" formControlName="FatherName" /></div>
-            <div class="field"><label class="field-label">Father Contact</label><input class="app-input" formControlName="FatherContact" /></div>
-            <div class="field"><label class="field-label">Father First Name</label><input class="app-input" formControlName="FatherFirstName" /></div>
-            <div class="field"><label class="field-label">Father Last Name</label><input class="app-input" formControlName="FatherLastName" /></div>
-            <div class="field"><label class="field-label">Father Address</label><input class="app-input" formControlName="FatherAddress" /></div>
-            <div class="field"><label class="field-label">Father Telephone</label><input class="app-input" formControlName="FatherTelephone" /></div>
-            <div class="field"><label class="field-label">Father Email</label><input class="app-input" formControlName="FatherEmail" /></div>
-            <div class="field"><label class="field-label">Father DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="FatherDOB" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Father Is Deceased</label><input class="app-input" formControlName="FatherIsDeceased" /></div>
-            <div class="field"><label class="field-label">Father Nationality</label><input class="app-input" formControlName="FatherNationality" /></div>
+            <div class="field"><label class="field-label">Father OpenEMIS ID</label><input
+              class="app-input" formControlName="FatherOpenEMIS_ID"/></div>
+            <div class="field"><label class="field-label">Father Name</label><input
+              class="app-input" formControlName="FatherName"/></div>
+            <div class="field"><label class="field-label">Father Contact</label><input
+              class="app-input" formControlName="FatherContact"/></div>
+            <div class="field"><label class="field-label">Father First Name</label><input
+              class="app-input" formControlName="FatherFirstName"/></div>
+            <div class="field"><label class="field-label">Father Last Name</label><input
+              class="app-input" formControlName="FatherLastName"/></div>
+            <div class="field"><label class="field-label">Father Address</label><input
+              class="app-input" formControlName="FatherAddress"/></div>
+            <div class="field"><label class="field-label">Father Telephone</label><input
+              class="app-input" formControlName="FatherTelephone"/></div>
+            <div class="field"><label class="field-label">Father Email</label><input
+              class="app-input" formControlName="FatherEmail"/></div>
+            <div class="field"><label class="field-label">Father DOB (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="FatherDOB" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Father Is Deceased</label><input
+              class="app-input" formControlName="FatherIsDeceased"/></div>
+            <div class="field"><label class="field-label">Father Nationality</label><input
+              class="app-input" formControlName="FatherNationality"/></div>
           </div>
         </section>
 
@@ -148,18 +231,31 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Guardian</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Guardian OpenEMIS ID</label><input class="app-input" formControlName="GuardianOpenEMIS_ID" /></div>
-            <div class="field"><label class="field-label">Guardian Name</label><input class="app-input" formControlName="GuardianName" /></div>
-            <div class="field"><label class="field-label">Guardian Gender</label><input class="app-input" formControlName="GuardianGender" /></div>
-            <div class="field"><label class="field-label">Guardian Date Of Birth (DD-MM-YYYY)</label><input class="app-input" formControlName="GuardianDateOfBirth" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Guardian First Name</label><input class="app-input" formControlName="GuardianFirstName" /></div>
-            <div class="field"><label class="field-label">Guardian Last Name</label><input class="app-input" formControlName="GuardianLastName" /></div>
-            <div class="field"><label class="field-label">Guardian Address</label><input class="app-input" formControlName="GuardianAddress" /></div>
-            <div class="field"><label class="field-label">Guardian Telephone</label><input class="app-input" formControlName="GuardianTelephone" /></div>
-            <div class="field"><label class="field-label">Guardian Email</label><input class="app-input" formControlName="GuardianEmail" /></div>
-            <div class="field"><label class="field-label">Guardian DOB (DD-MM-YYYY)</label><input class="app-input" formControlName="GuardianDOB" placeholder="DD-MM-YYYY" /></div>
-            <div class="field"><label class="field-label">Guardian Is Deceased</label><input class="app-input" formControlName="GuardianIsDeceased" /></div>
-            <div class="field"><label class="field-label">Guardian Nationality</label><input class="app-input" formControlName="GuardianNationality" /></div>
+            <div class="field"><label class="field-label">Guardian OpenEMIS ID</label><input
+              class="app-input" formControlName="GuardianOpenEMIS_ID"/></div>
+            <div class="field"><label class="field-label">Guardian Name</label><input
+              class="app-input" formControlName="GuardianName"/></div>
+            <div class="field"><label class="field-label">Guardian Gender</label><input
+              class="app-input" formControlName="GuardianGender"/></div>
+            <div class="field"><label class="field-label">Guardian Date Of Birth
+              (DD-MM-YYYY)</label><input class="app-input" formControlName="GuardianDateOfBirth"
+                                         placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Guardian First Name</label><input
+              class="app-input" formControlName="GuardianFirstName"/></div>
+            <div class="field"><label class="field-label">Guardian Last Name</label><input
+              class="app-input" formControlName="GuardianLastName"/></div>
+            <div class="field"><label class="field-label">Guardian Address</label><input
+              class="app-input" formControlName="GuardianAddress"/></div>
+            <div class="field"><label class="field-label">Guardian Telephone</label><input
+              class="app-input" formControlName="GuardianTelephone"/></div>
+            <div class="field"><label class="field-label">Guardian Email</label><input
+              class="app-input" formControlName="GuardianEmail"/></div>
+            <div class="field"><label class="field-label">Guardian DOB (DD-MM-YYYY)</label><input
+              class="app-input" formControlName="GuardianDOB" placeholder="DD-MM-YYYY"/></div>
+            <div class="field"><label class="field-label">Guardian Is Deceased</label><input
+              class="app-input" formControlName="GuardianIsDeceased"/></div>
+            <div class="field"><label class="field-label">Guardian Nationality</label><input
+              class="app-input" formControlName="GuardianNationality"/></div>
           </div>
         </section>
 
@@ -167,8 +263,10 @@ import { Subject, of } from 'rxjs';
         <section class="fieldset-card">
           <h3 class="section-title">Living Situation</h3>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Student Living With</label><input class="app-input" formControlName="Studentlivingwith" /></div>
-            <div class="field"><label class="field-label">Student Living With Guardian</label><input class="app-input" formControlName="StudentLivingWithGuardian" /></div>
+            <div class="field"><label class="field-label">Student Living With</label><input
+              class="app-input" formControlName="Studentlivingwith"/></div>
+            <div class="field"><label class="field-label">Student Living With Guardian</label><input
+              class="app-input" formControlName="StudentLivingWithGuardian"/></div>
           </div>
         </section>
       </div>
@@ -181,8 +279,8 @@ export class AdminStudentEditorComponent {
 
   form: FormGroup = this.fb.group({
     // basics
-    StudentID: [null],
-    StudentOpenEMIS_ID: [''],
+    StudentID: [{value: null, disabled: true}],
+    StudentOpenEMIS_ID: [{value: '', disabled: true}],
     StudentName: [''],
     StudentStatus: [''],
     Gender: [''],
@@ -190,24 +288,24 @@ export class AdminStudentEditorComponent {
     Age: [null],
     PreferredNationality: [''],
     AllNationalities: [''],
-    DefaultIdentitytype: [''],
+    DefaultIdentityType: [{value: '', disabled: true}],
     IdentityNumber: [''],
     RiskIndex: [''],
     Address: [''],
     NIB2: [''],
     ExtraActivities: [''],
     // institution & location
-    InstitutionCode: [''],
-    InstitutionName: [''],
-    Ownewship: [''],
-    Type: [''],
-    Sector: [''],
-    Provider: [''],
-    Locality: [''],
-    AreaEducationCode: [''],
-    AreaEducation: [''],
-    AreaAdministrativeCode: [''],
-    AreaAdministrative: [''],
+    InstitutionCode: [{value: '', disabled: true}],
+    InstitutionName: [{value: '', disabled: true}],
+    Ownewship: [{value: '', disabled: true}],
+    Type: [{value: '', disabled: true}],
+    Sector: [{value: '', disabled: true}],
+    Provider: [{value: '', disabled: true}],
+    Locality: [{value: '', disabled: true}],
+    AreaEducationCode: [{value: '', disabled: true}],
+    AreaEducation: [{value: '', disabled: true}],
+    AreaAdministrativeCode: [{value: '', disabled: true}],
+    AreaAdministrative: [{value: '', disabled: true}],
     // academic
     EducationGrade: [''],
     AcademicPeriod: [''],
