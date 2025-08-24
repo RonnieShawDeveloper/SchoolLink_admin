@@ -49,6 +49,29 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
         <div style="color: var(--bah-text-muted);">Loading students...</div>
       </div>
 
+      <!-- Bulk Actions Toolbar -->
+      <div *ngIf="selectedSchool() && !loading() && students().length > 0 && selectedStudents().length > 0" class="app-card" style="padding: 12px; margin-bottom: 8px; background: #E8F7FB; border: 1px solid #B3E5FC;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <strong>{{ selectedStudents().length }}</strong> student(s) selected
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-primary" (click)="bulkGateIn()" style="padding: 6px 12px; font-size: 0.85rem;">
+              Gate In
+            </button>
+            <button class="btn-primary" (click)="bulkGateOut()" style="padding: 6px 12px; font-size: 0.85rem;">
+              Gate Out
+            </button>
+            <button class="btn-secondary" (click)="bulkRemove()" style="padding: 6px 12px; font-size: 0.85rem; background: #dc3545;">
+              Remove
+            </button>
+            <button class="btn-secondary" (click)="clearSelection()" style="padding: 6px 12px; font-size: 0.85rem;">
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Students table -->
       <div *ngIf="selectedSchool() && !loading()" class="app-card" style="padding: 8px; overflow:auto;">
         <div *ngIf="students().length === 0" style="padding: 16px; text-align: center; color: var(--bah-text-muted);">
@@ -58,6 +81,13 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
         <table *ngIf="students().length > 0" style="width:100%; border-collapse: collapse;">
           <thead>
             <tr style="text-align:left;">
+              <th style="padding:8px; border-bottom:1px solid var(--bah-border); width: 40px;">
+                <input type="checkbox"
+                       [checked]="isAllSelected()"
+                       [indeterminate]="isPartiallySelected()"
+                       (change)="toggleSelectAll($event)"
+                       style="cursor: pointer;">
+              </th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Name</th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Student OpenEMIS ID</th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Grade</th>
@@ -67,14 +97,31 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let s of students()" style="border-top:1px solid var(--bah-border)">
-              <td style="padding:8px;">{{ s.StudentName }}</td>
+            <tr *ngFor="let s of students()"
+                [ngStyle]="getRowStyle(s)"
+                style="border-top:1px solid var(--bah-border)">
+              <td style="padding:8px;">
+                <input type="checkbox"
+                       [checked]="isStudentSelected(s.StudentID)"
+                       (change)="toggleStudentSelection(s.StudentID, $event)"
+                       style="cursor: pointer;">
+              </td>
+              <td style="padding:8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>{{ s.StudentName }}</span>
+                  <span [ngStyle]="getGenderStyle(s.Gender)">{{ getGenderText(s.Gender) }}</span>
+                </div>
+              </td>
               <td style="padding:8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</td>
               <td style="padding:8px;">{{ s.EducationGrade }}</td>
               <td style="padding:8px; color: var(--bah-text-muted);">—</td>
               <td style="padding:8px; color: var(--bah-text-muted);">—</td>
               <td style="padding:8px; text-align:right;">
-                <a class="btn-primary" [routerLink]="['/students', s.StudentID]">View</a>
+                <a class="btn-primary"
+                   [routerLink]="['/students', s.StudentID]"
+                   style="padding: 4px 8px; font-size: 0.8rem; margin: 2px 0; display: inline-block; min-width: 50px; text-align: center;">
+                  View
+                </a>
               </td>
             </tr>
           </tbody>
@@ -91,6 +138,7 @@ export class StudentsListComponent implements OnInit {
   loading = signal<boolean>(false);
   statistics = signal<SchoolStatistics | null>(null);
   loadingStatistics = signal<boolean>(false);
+  selectedStudents = signal<number[]>([]);
 
   ngOnInit() {
     // Subscribe to selected school changes
@@ -139,5 +187,145 @@ export class StudentsListComponent implements OnInit {
         this.loadingStatistics.set(false);
       }
     });
+  }
+
+  // Selection management methods
+  isStudentSelected(studentId: number): boolean {
+    return this.selectedStudents().includes(studentId);
+  }
+
+  toggleStudentSelection(studentId: number, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    const currentSelection = this.selectedStudents();
+
+    if (checkbox.checked) {
+      if (!currentSelection.includes(studentId)) {
+        this.selectedStudents.set([...currentSelection, studentId]);
+      }
+    } else {
+      this.selectedStudents.set(currentSelection.filter(id => id !== studentId));
+    }
+  }
+
+  isAllSelected(): boolean {
+    const currentStudents = this.students();
+    const selectedIds = this.selectedStudents();
+    return currentStudents.length > 0 && currentStudents.every(s => selectedIds.includes(s.StudentID));
+  }
+
+  isPartiallySelected(): boolean {
+    const selectedIds = this.selectedStudents();
+    const currentStudents = this.students();
+    return selectedIds.length > 0 && selectedIds.length < currentStudents.length;
+  }
+
+  toggleSelectAll(event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    if (checkbox.checked) {
+      // Select all students
+      const allStudentIds = this.students().map(s => s.StudentID);
+      this.selectedStudents.set(allStudentIds);
+    } else {
+      // Deselect all
+      this.selectedStudents.set([]);
+    }
+  }
+
+  clearSelection(): void {
+    this.selectedStudents.set([]);
+  }
+
+  // Gender display methods
+  getGenderText(gender: string | undefined): string {
+    if (!gender) return '(Unknown)';
+
+    const g = gender.toLowerCase();
+    if (g === 'm' || g === 'male') return '(Male)';
+    if (g === 'f' || g === 'female') return '(Female)';
+    return '(Unknown)';
+  }
+
+  getGenderStyle(gender: string | undefined): any {
+    if (!gender) return { color: '#dc3545', fontSize: '0.8rem', fontWeight: '500' };
+
+    const g = gender.toLowerCase();
+    if (g === 'm' || g === 'male') return { color: '#116149', fontSize: '0.8rem', fontWeight: '500' };
+    if (g === 'f' || g === 'female') return { color: '#BE185D', fontSize: '0.8rem', fontWeight: '500' };
+    return { color: '#dc3545', fontSize: '0.8rem', fontWeight: '500' };
+  }
+
+  // Row styling method
+  getRowStyle(student: StudentData): any {
+    if (student.StudentStatus === 'Not Enrolled') {
+      return {
+        opacity: '0.5',
+        background: '#f8f9fa',
+        color: '#6c757d'
+      };
+    }
+    return {};
+  }
+
+  // Bulk operation methods
+  bulkGateIn(): void {
+    const selectedIds = this.selectedStudents();
+    if (selectedIds.length === 0) return;
+
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    const timeInput = prompt(`Enter Gate In time for ${selectedIds.length} selected student(s):`, currentTime);
+    if (!timeInput) return;
+
+    // Here you would typically call an API to update gate in times
+    // For now, we'll just show a confirmation
+    alert(`Gate In time "${timeInput}" has been recorded for ${selectedIds.length} student(s).`);
+    this.clearSelection();
+  }
+
+  bulkGateOut(): void {
+    const selectedIds = this.selectedStudents();
+    if (selectedIds.length === 0) return;
+
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    const timeInput = prompt(`Enter Gate Out time for ${selectedIds.length} selected student(s):`, currentTime);
+    if (!timeInput) return;
+
+    // Here you would typically call an API to update gate out times
+    // For now, we'll just show a confirmation
+    alert(`Gate Out time "${timeInput}" has been recorded for ${selectedIds.length} student(s).`);
+    this.clearSelection();
+  }
+
+  bulkRemove(): void {
+    const selectedIds = this.selectedStudents();
+    if (selectedIds.length === 0) return;
+
+    const confirmed = confirm(`Are you sure you want to remove ${selectedIds.length} selected student(s)? This will set their status to "Not Enrolled".`);
+    if (!confirmed) return;
+
+    // Update student status to "Not Enrolled" for selected students
+    const updatedStudents = this.students().map(student => {
+      if (selectedIds.includes(student.StudentID)) {
+        return { ...student, StudentStatus: 'Not Enrolled' };
+      }
+      return student;
+    });
+
+    this.students.set(updatedStudents);
+    alert(`${selectedIds.length} student(s) have been marked as "Not Enrolled".`);
+    this.clearSelection();
+
+    // Here you would typically call an API to update the database
+    // The actual database update would be implemented later
   }
 }
