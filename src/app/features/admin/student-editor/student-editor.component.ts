@@ -35,12 +35,12 @@ import { Subject, of } from 'rxjs';
         <div style="font-size:0.85rem; color: var(--bah-text-muted); margin-bottom:6px;">Student, Parent, Guardian or Student ID</div>
         <input type="text" class="app-input" placeholder="Type 3+ characters" (input)="onSearch($event)" />
         <div *ngIf="searching()" style="margin-top:8px; color: var(--bah-text-muted);">Searching…</div>
-        <div *ngIf="results().length" style="margin-top:8px; max-height:240px; overflow:auto; border-top:1px solid var(--bah-border);">
+      <div *ngIf="results().length" style="margin-top:8px; max-height:240px; overflow:auto; border-top:1px solid var(--bah-border);">
           <div *ngFor="let s of results()" (click)="select(s)"
                style="padding:8px; border-bottom:1px solid var(--bah-border); cursor:pointer; display:flex; justify-content:space-between;">
             <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               <div style="font-weight:600;">{{ s.StudentName || '—' }}</div>
-              <div style="font-size:0.85rem; color: var(--bah-text-muted);">{{ s.InstitutionName || '—' }}</div>
+              <div style="font-size:0.85rem; color: var(--bah-text-muted);">DOB: {{ s.DateOfBirth || '—' }}</div>
             </div>
             <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</div>
           </div>
@@ -273,11 +273,11 @@ export class AdminStudentEditorComponent {
           this.lastQuery = q;
           if (!q || q.length < 3) return of({ items: [], total: 0, page: 1, totalPages: 0 } as SearchResponse);
           this.searching.set(true);
-          return this.api.searchStudents(q);
+          return this.api.searchStudents(q, 1, 20);
         })
       )
       .subscribe({
-        next: (res) => { this.results.set(res.items || []); this.searching.set(false); },
+        next: (res) => { const items = Array.isArray(res?.items) ? res.items.slice(0, 20) : []; this.results.set(items); this.searching.set(false); },
         error: () => { this.results.set([]); this.searching.set(false); }
       });
   }
