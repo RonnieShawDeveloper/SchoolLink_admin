@@ -34,6 +34,7 @@ function parsePaging(limitStr?: string, pageStr?: string) {
 function isSearchRoute(path: string) { return path.endsWith('/students/search'); }
 function isInstitutionRoute(path: string) { return path.endsWith('/students/by-institution'); }
 function isCountRoute(path: string) { return path.endsWith('/students/count'); }
+function isSchoolsRoute(path: string) { return path.endsWith('/schools/list'); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
@@ -96,6 +97,42 @@ export const handler = async (event: any) => {
       const totalRecords = Number(cntRows?.[0]?.totalRecords || 0);
 
       return resp(200, { totalRecords });
+    }
+
+    if (isSchoolsRoute(route)) {
+      if (method !== 'GET') return resp(405, { message: 'Method not allowed' });
+
+      const [rows]: any = await pool.query(`
+        SELECT DISTINCT
+          InstitutionCode,
+          InstitutionName,
+          Ownewship,
+          Type,
+          Sector,
+          Provider,
+          Locality,
+          AreaEducationCode,
+          AreaEducation,
+          AreaAdministrativeCode,
+          AreaAdministrative
+        FROM StudentData
+        WHERE InstitutionCode IS NOT NULL
+          AND InstitutionCode != ''
+          AND InstitutionName IS NOT NULL
+          AND InstitutionName != ''
+        ORDER BY InstitutionName ASC
+      `);
+
+      // Group by Institution Code to handle potential duplicates
+      const schoolsMap = new Map();
+      rows.forEach((row: any) => {
+        if (!schoolsMap.has(row.InstitutionCode)) {
+          schoolsMap.set(row.InstitutionCode, row);
+        }
+      });
+
+      const schools = Array.from(schoolsMap.values());
+      return resp(200, { schools });
     }
 
     if (isUpdateRoute(route)) {

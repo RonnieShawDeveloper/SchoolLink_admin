@@ -1,15 +1,16 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { StudentApiService, SearchResponse } from '../../../core/services/student-api.service';
+import { StudentApiService, SearchResponse, SchoolOption, AcademicUpdateData } from '../../../core/services/student-api.service';
 import { StudentData } from '../../../core/models/student-data';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject, of } from 'rxjs';
+import { AcademicUpdateDialogComponent } from '../../../shared/components/academic-update-dialog/academic-update-dialog.component';
 
 @Component({
   selector: 'app-admin-student-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AcademicUpdateDialogComponent],
   styles: [
     `:host { display:block; }
      .editor-root { display:flex; flex-direction:column; gap:16px; }
@@ -25,6 +26,9 @@ import { Subject, of } from 'rxjs';
      .app-input { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--bah-border); border-radius:10px; background:#fff; box-shadow: inset 0 1px 1.5px rgba(0,0,0,0.06); transition: border-color .15s ease, box-shadow .15s ease; }
      .app-input:focus { outline:none; border-color: var(--bah-primary); box-shadow: 0 0 0 3px rgba(0,163,199,0.15), inset 0 1px 1.5px rgba(0,0,0,0.06); }
      textarea.app-input { min-height:70px; resize:vertical; }
+     .btn-secondary { background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.15s ease; }
+     .btn-secondary:hover { background: #545b62; }
+     .btn-secondary:disabled { background: #adb5bd; cursor: not-allowed; }
     `
   ],
   template: `
@@ -118,40 +122,57 @@ import { Subject, of } from 'rxjs';
 
         <!-- Institution & Location -->
         <section class="fieldset-card">
-          <h3 class="section-title">Institution & Location</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 class="section-title" style="margin: 0;">Institution & Location</h3>
+            <button
+              *ngIf="formEnabled() && !showSchoolSelector()"
+              type="button"
+              class="btn-secondary"
+              (click)="enableSchoolChange()"
+              style="padding: 6px 12px; font-size: 0.85rem;">
+              Change School
+            </button>
+            <div *ngIf="showSchoolSelector()" style="display: flex; gap: 8px;">
+              <button type="button" class="btn-secondary" (click)="cancelSchoolChange()" style="padding: 4px 8px; font-size: 0.8rem;">Cancel</button>
+            </div>
+          </div>
           <div class="field-grid">
-            <div class="field"><label class="field-label">Institution Code</label><input
-              class="app-input" formControlName="InstitutionCode" [disabled]="true"/></div>
-            <div class="field"><label class="field-label">Institution Name</label><input
-              class="app-input" formControlName="InstitutionName" [disabled]="true"/></div>
-            <div class="field"><label class="field-label">Ownership</label><input class="app-input"
-                                                                                  formControlName="Ownewship"
-                                                                                  [disabled]="true"/>
+            <!-- Institution Code - conditional input/select -->
+            <div class="field">
+              <label class="field-label">Institution Code</label>
+              <input
+                *ngIf="!showSchoolSelector()"
+                class="app-input"
+                formControlName="InstitutionCode"
+                [disabled]="true" />
+              <select
+                *ngIf="showSchoolSelector()"
+                class="app-input"
+                formControlName="InstitutionCode"
+                (change)="onSchoolSelected($event)">
+                <option value="">Select a school...</option>
+                <option
+                  *ngFor="let school of schoolsList()"
+                  [value]="school.InstitutionCode">
+                  {{ school.InstitutionCode }} - {{ school.InstitutionName }}
+                </option>
+              </select>
+              <div *ngIf="showSchoolSelector() && loadingSchools()" style="font-size: 0.8rem; color: var(--bah-text-muted); margin-top: 4px;">
+                Loading schools...
+              </div>
             </div>
-            <div class="field"><label class="field-label">Type</label><input class="app-input"
-                                                                             formControlName="Type"
-                                                                             [disabled]="true"/>
-            </div>
-            <div class="field"><label class="field-label">Sector</label><input class="app-input"
-                                                                               formControlName="Sector"
-                                                                               [disabled]="true"/>
-            </div>
-            <div class="field"><label class="field-label">Provider</label><input class="app-input"
-                                                                                 formControlName="Provider"
-                                                                                 [disabled]="true"/>
-            </div>
-            <div class="field"><label class="field-label">Locality</label><input class="app-input"
-                                                                                 formControlName="Locality"
-                                                                                 [disabled]="true"/>
-            </div>
-            <div class="field"><label class="field-label">Area Education Code</label><input
-              class="app-input" formControlName="AreaEducationCode" [disabled]="true"/></div>
-            <div class="field"><label class="field-label">Area Education</label><input
-              class="app-input" formControlName="AreaEducation" [disabled]="true"/></div>
-            <div class="field"><label class="field-label">Area Administrative Code</label><input
-              class="app-input" formControlName="AreaAdministrativeCode" [disabled]="true"/></div>
-            <div class="field"><label class="field-label">Area Administrative</label><input
-              class="app-input" formControlName="AreaAdministrative" [disabled]="true"/></div>
+
+            <!-- Rest of Institution & Location fields remain the same -->
+            <div class="field"><label class="field-label">Institution Name</label><input class="app-input" formControlName="InstitutionName" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Ownership</label><input class="app-input" formControlName="Ownewship" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Type</label><input class="app-input" formControlName="Type" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Sector</label><input class="app-input" formControlName="Sector" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Provider</label><input class="app-input" formControlName="Provider" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Locality</label><input class="app-input" formControlName="Locality" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Education Code</label><input class="app-input" formControlName="AreaEducationCode" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Education</label><input class="app-input" formControlName="AreaEducation" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Administrative Code</label><input class="app-input" formControlName="AreaAdministrativeCode" [disabled]="true" /></div>
+            <div class="field"><label class="field-label">Area Administrative</label><input class="app-input" formControlName="AreaAdministrative" [disabled]="true" /></div>
           </div>
         </section>
 
@@ -278,6 +299,13 @@ import { Subject, of } from 'rxjs';
           </div>
         </section>
       </div>
+
+      <!-- Academic Update Dialog -->
+      <app-academic-update-dialog
+        *ngIf="showAcademicDialog()"
+        (confirmed)="onAcademicUpdateConfirmed($event)"
+        (cancelled)="onAcademicUpdateCancelled()">
+      </app-academic-update-dialog>
     </div>
   `
 })
@@ -369,6 +397,11 @@ export class AdminStudentEditorComponent implements OnInit {
   searching = signal<boolean>(false);
   formEnabled = signal<boolean>(false);
   totalRecords = signal<number>(0);
+  schoolsList = signal<SchoolOption[]>([]);
+  showSchoolSelector = signal<boolean>(false);
+  showAcademicDialog = signal<boolean>(false);
+  loadingSchools = signal<boolean>(false);
+  pendingSchoolData: SchoolOption | null = null;
   lastQuery = '';
 
   constructor() {
@@ -391,6 +424,7 @@ export class AdminStudentEditorComponent implements OnInit {
 
   ngOnInit() {
     this.loadTotalStudentCount();
+    this.loadSchoolsList(); // Preload schools list
   }
 
   private loadTotalStudentCount() {
@@ -403,6 +437,90 @@ export class AdminStudentEditorComponent implements OnInit {
         this.totalRecords.set(0);
       }
     });
+  }
+
+  private loadSchoolsList() {
+    this.loadingSchools.set(true);
+    this.api.getSchoolsList().subscribe({
+      next: (response) => {
+        this.schoolsList.set(response.schools);
+        this.loadingSchools.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load schools list:', error);
+        this.schoolsList.set([]);
+        this.loadingSchools.set(false);
+      }
+    });
+  }
+
+  enableSchoolChange() {
+    if (this.schoolsList().length === 0) {
+      this.loadSchoolsList();
+    }
+    this.showSchoolSelector.set(true);
+    // Enable the InstitutionCode control temporarily
+    this.form.get('InstitutionCode')?.enable();
+  }
+
+  cancelSchoolChange() {
+    this.showSchoolSelector.set(false);
+    // Re-disable the InstitutionCode control
+    this.form.get('InstitutionCode')?.disable();
+    this.pendingSchoolData = null;
+  }
+
+  onSchoolSelected(event: Event) {
+    const selectedCode = (event.target as HTMLSelectElement).value;
+    if (!selectedCode) return;
+
+    const selectedSchool = this.schoolsList().find(school => school.InstitutionCode === selectedCode);
+    if (!selectedSchool) return;
+
+    // Store the selected school data for later use
+    this.pendingSchoolData = selectedSchool;
+
+    // Hide selector and show academic update dialog
+    this.showSchoolSelector.set(false);
+    this.showAcademicDialog.set(true);
+  }
+
+  onAcademicUpdateConfirmed(academicData: AcademicUpdateData) {
+    if (!this.pendingSchoolData) return;
+
+    // Update all school-related form fields (static data)
+    const schoolFields = {
+      InstitutionCode: this.pendingSchoolData.InstitutionCode,
+      InstitutionName: this.pendingSchoolData.InstitutionName,
+      Ownewship: this.pendingSchoolData.Ownewship,
+      Type: this.pendingSchoolData.Type,
+      Sector: this.pendingSchoolData.Sector,
+      Provider: this.pendingSchoolData.Provider,
+      Locality: this.pendingSchoolData.Locality,
+      AreaEducationCode: this.pendingSchoolData.AreaEducationCode,
+      AreaEducation: this.pendingSchoolData.AreaEducation,
+      AreaAdministrativeCode: this.pendingSchoolData.AreaAdministrativeCode,
+      AreaAdministrative: this.pendingSchoolData.AreaAdministrative,
+      // Academic fields from dialog (already converted to DD-MM-YYYY format)
+      EducationGrade: academicData.EducationGrade,
+      AcademicPeriod: academicData.AcademicPeriod,
+      StartDate: academicData.StartDate,
+      EndDate: academicData.EndDate
+    };
+
+    this.form.patchValue(schoolFields);
+
+    // Clean up
+    this.showAcademicDialog.set(false);
+    this.form.get('InstitutionCode')?.disable();
+    this.pendingSchoolData = null;
+  }
+
+  onAcademicUpdateCancelled() {
+    this.showAcademicDialog.set(false);
+    this.pendingSchoolData = null;
+    // Re-disable the InstitutionCode control
+    this.form.get('InstitutionCode')?.disable();
   }
 
   onSearch(ev: Event) {

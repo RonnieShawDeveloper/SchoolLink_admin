@@ -10,6 +10,27 @@ export interface SearchResponse {
   totalPages: number;
 }
 
+export interface SchoolOption {
+  InstitutionCode: string;
+  InstitutionName: string;
+  Ownewship: string;
+  Type: string;
+  Sector: string;
+  Provider: string;
+  Locality: string;
+  AreaEducationCode: string;
+  AreaEducation: string;
+  AreaAdministrativeCode: string;
+  AreaAdministrative: string;
+}
+
+export interface AcademicUpdateData {
+  EducationGrade: string;
+  AcademicPeriod: string;
+  StartDate: string;
+  EndDate: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudentApiService {
   private readonly http = inject(HttpClient);
@@ -37,5 +58,9 @@ export class StudentApiService {
 
   getStudentCount(): Observable<{ totalRecords: number }> {
     return this.http.get<{ totalRecords: number }>(`${this.baseUrl()}/students/count`);
+  }
+
+  getSchoolsList(): Observable<{ schools: SchoolOption[] }> {
+    return this.http.get<{ schools: SchoolOption[] }>(`${this.baseUrl()}/schools/list`);
   }
 }
