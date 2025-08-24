@@ -26,7 +26,7 @@ backend.studentSearchFn.resources.lambda.addFunctionUrl({
   authType: lambda.FunctionUrlAuthType.NONE,
   cors: {
     allowedOrigins: ['*'],
-    allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST, lambda.HttpMethod.OPTIONS],
+    allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
     allowedHeaders: ['*'],
   },
 });
