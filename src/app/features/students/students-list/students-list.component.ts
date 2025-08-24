@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { StudentData } from '../../../core/models/student-data';
-import { StudentApiService, SelectedSchoolData } from '../../../core/services/student-api.service';
+import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../../core/services/student-api.service';
 
 @Component({
   selector: 'app-students-list',
@@ -16,6 +16,31 @@ import { StudentApiService, SelectedSchoolData } from '../../../core/services/st
       <div *ngIf="!selectedSchool()" class="app-card" style="padding: 16px; text-align: center;">
         <div style="color: var(--bah-text-muted); font-size: 1.1rem;">
           Please select a school from the Dashboard to view students.
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      <div *ngIf="selectedSchool()" class="app-card" style="padding: 16px; margin-bottom: 16px;">
+        <h3 style="margin: 0 0 12px 0; color: var(--bah-primary);">Student Statistics</h3>
+        <div *ngIf="loadingStatistics()" style="color: var(--bah-text-muted); font-style: italic;">
+          Loading statistics...
+        </div>
+        <div *ngIf="!loadingStatistics() && statistics()" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+          <div style="text-align: center; padding: 12px; background: #E8F7FB; border-radius: 8px; border: 1px solid #B3E5FC;">
+            <div style="font-size: 0.85rem; color: var(--bah-text-muted); margin-bottom: 4px;">Total Students</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--bah-primary);">{{ statistics()?.totalStudents?.toLocaleString() || 0 }}</div>
+          </div>
+          <div style="text-align: center; padding: 12px; background: #E7F8F0; border-radius: 8px; border: 1px solid #B3D9C7;">
+            <div style="font-size: 0.85rem; color: var(--bah-text-muted); margin-bottom: 4px;">Males</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #116149;">{{ statistics()?.maleCount?.toLocaleString() || 0 }}</div>
+          </div>
+          <div style="text-align: center; padding: 12px; background: #FDF2F8; border-radius: 8px; border: 1px solid #F3E8FF;">
+            <div style="font-size: 0.85rem; color: var(--bah-text-muted); margin-bottom: 4px;">Females</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #BE185D;">{{ statistics()?.femaleCount?.toLocaleString() || 0 }}</div>
+          </div>
+        </div>
+        <div *ngIf="!loadingStatistics() && !statistics()" style="color: var(--bah-text-muted); font-style: italic;">
+          Unable to load statistics for this school.
         </div>
       </div>
 
@@ -64,12 +89,15 @@ export class StudentsListComponent implements OnInit {
   selectedSchool = signal<SelectedSchoolData | null>(null);
   students = signal<StudentData[]>([]);
   loading = signal<boolean>(false);
+  statistics = signal<SchoolStatistics | null>(null);
+  loadingStatistics = signal<boolean>(false);
 
   ngOnInit() {
     // Subscribe to selected school changes
     this.api.selectedSchool$.subscribe(school => {
       this.selectedSchool.set(school);
       this.loadStudentsForSchool(school);
+      this.loadStatisticsForSchool(school);
     });
   }
 
@@ -89,6 +117,26 @@ export class StudentsListComponent implements OnInit {
         console.error('Failed to load students for school:', error);
         this.students.set([]);
         this.loading.set(false);
+      }
+    });
+  }
+
+  private loadStatisticsForSchool(school: SelectedSchoolData | null) {
+    if (!school) {
+      this.statistics.set(null);
+      return;
+    }
+
+    this.loadingStatistics.set(true);
+    this.api.getSchoolStatistics(school.InstitutionCode).subscribe({
+      next: (stats) => {
+        this.statistics.set(stats);
+        this.loadingStatistics.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load statistics for school:', error);
+        this.statistics.set(null);
+        this.loadingStatistics.set(false);
       }
     });
   }

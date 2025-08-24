@@ -36,6 +36,7 @@ function isInstitutionRoute(path: string) { return path.endsWith('/students/by-i
 function isCountRoute(path: string) { return path.endsWith('/students/count'); }
 function isSchoolsRoute(path: string) { return path.endsWith('/schools/list'); }
 function isStudentsBySchoolRoute(path: string) { return path.endsWith('/students/by-school'); }
+function isSchoolStatsRoute(path: string) { return path.endsWith('/students/school-stats'); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
@@ -156,16 +157,48 @@ export const handler = async (event: any) => {
           StudentName,
           StudentOpenEMIS_ID,
           EducationGrade,
+          Gender,
           InstitutionCode,
           InstitutionName
         FROM StudentData
         WHERE InstitutionCode = ?
-        ORDER BY StudentName ASC
-        LIMIT ? OFFSET ?`,
-        [institutionCode, limit, offset]
+        ORDER BY StudentName ASC`,
+        [institutionCode]
       );
 
-      return resp(200, { items: rows, total, page, totalPages: Math.ceil(total / limit) });
+      return resp(200, { items: rows, total, page: 1, totalPages: 1 });
+    }
+
+    if (isSchoolStatsRoute(route)) {
+      if (method !== 'GET') return resp(405, { message: 'Method not allowed' });
+
+      const institutionCode = qs.institutionCode;
+      if (!institutionCode) {
+        return resp(400, { message: 'institutionCode parameter is required' });
+      }
+
+      // Get total count and gender breakdown in a single query
+      const [statsRows]: any = await pool.query(
+        `SELECT
+          COUNT(*) as totalStudents,
+          SUM(CASE WHEN UPPER(Gender) IN ('M', 'MALE') THEN 1 ELSE 0 END) as maleCount,
+          SUM(CASE WHEN UPPER(Gender) IN ('F', 'FEMALE') THEN 1 ELSE 0 END) as femaleCount
+        FROM StudentData
+        WHERE InstitutionCode = ?`,
+        [institutionCode]
+      );
+
+      const stats = statsRows?.[0] || {};
+      const totalStudents = Number(stats.totalStudents || 0);
+      const maleCount = Number(stats.maleCount || 0);
+      const femaleCount = Number(stats.femaleCount || 0);
+
+      return resp(200, {
+        totalStudents,
+        maleCount,
+        femaleCount,
+        institutionCode
+      });
     }
 
     if (isUpdateRoute(route)) {

@@ -36,6 +36,13 @@ export interface SelectedSchoolData {
   InstitutionName: string;
 }
 
+export interface SchoolStatistics {
+  totalStudents: number;
+  maleCount: number;
+  femaleCount: number;
+  institutionCode: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudentApiService {
   private readonly http = inject(HttpClient);
@@ -110,11 +117,13 @@ export class StudentApiService {
     return this.http.get<{ schools: SchoolOption[] }>(`${this.baseUrl()}/schools/list`);
   }
 
-  getStudentsBySchool(institutionCode: string, page = 1, limit = 50): Observable<SearchResponse> {
-    const params = new HttpParams()
-      .set('institutionCode', institutionCode)
-      .set('page', page)
-      .set('limit', limit);
+  getStudentsBySchool(institutionCode: string): Observable<SearchResponse> {
+    const params = new HttpParams().set('institutionCode', institutionCode);
     return this.http.get<SearchResponse>(`${this.baseUrl()}/students/by-school`, { params });
+  }
+
+  getSchoolStatistics(institutionCode: string): Observable<SchoolStatistics> {
+    const params = new HttpParams().set('institutionCode', institutionCode);
+    return this.http.get<SchoolStatistics>(`${this.baseUrl()}/students/school-stats`, { params });
   }
 }
