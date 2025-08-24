@@ -33,6 +33,7 @@ function parsePaging(limitStr?: string, pageStr?: string) {
 
 function isSearchRoute(path: string) { return path.endsWith('/students/search'); }
 function isInstitutionRoute(path: string) { return path.endsWith('/students/by-institution'); }
+function isCountRoute(path: string) { return path.endsWith('/students/count'); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 
 export const handler = async (event: any) => {
@@ -86,6 +87,15 @@ export const handler = async (event: any) => {
         [like, limit, offset]
       );
       return resp(200, { items: rows, total, page, totalPages: Math.ceil(total / limit) });
+    }
+
+    if (isCountRoute(route)) {
+      if (method !== 'GET') return resp(405, { message: 'Method not allowed' });
+
+      const [cntRows]: any = await pool.query('SELECT COUNT(*) as totalRecords FROM StudentData');
+      const totalRecords = Number(cntRows?.[0]?.totalRecords || 0);
+
+      return resp(200, { totalRecords });
     }
 
     if (isUpdateRoute(route)) {

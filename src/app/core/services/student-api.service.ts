@@ -34,4 +34,8 @@ export class StudentApiService {
   updateStudent(payload: Partial<StudentData> & { StudentID?: number; StudentOpenEMIS_ID?: string }): Observable<any> {
     return this.http.post(`${this.baseUrl()}/students/update`, payload);
   }
+
+  getStudentCount(): Observable<{ totalRecords: number }> {
+    return this.http.get<{ totalRecords: number }>(`${this.baseUrl()}/students/count`);
+  }
 }

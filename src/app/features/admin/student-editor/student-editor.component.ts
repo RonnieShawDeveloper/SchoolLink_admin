@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { StudentApiService, SearchResponse } from '../../../core/services/student-api.service';
@@ -31,7 +31,15 @@ import { Subject, of } from 'rxjs';
     <div class="route-enter editor-root">
       <!-- Search (full width) -->
       <div class="app-card search-card">
-        <h3 style="margin:0 0 8px 0;">Find Student</h3>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <h3 style="margin: 0;">Find Student</h3>
+          <div style="text-align: right;">
+            <div style="font-size: 0.75rem; color: var(--bah-text-muted); margin-bottom: 2px;">Total Records</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--bah-primary);">
+              {{ totalRecords().toLocaleString() }}
+            </div>
+          </div>
+        </div>
         <div style="font-size:0.85rem; color: var(--bah-text-muted); margin-bottom:6px;">Student,
           Parent, Guardian or Student ID
         </div>
@@ -273,7 +281,7 @@ import { Subject, of } from 'rxjs';
     </div>
   `
 })
-export class AdminStudentEditorComponent {
+export class AdminStudentEditorComponent implements OnInit {
   private readonly api = inject(StudentApiService);
   private readonly fb = inject(FormBuilder);
 
@@ -360,6 +368,7 @@ export class AdminStudentEditorComponent {
   results = signal<StudentData[]>([]);
   searching = signal<boolean>(false);
   formEnabled = signal<boolean>(false);
+  totalRecords = signal<number>(0);
   lastQuery = '';
 
   constructor() {
@@ -378,6 +387,22 @@ export class AdminStudentEditorComponent {
         next: (res) => { const items = Array.isArray(res?.items) ? res.items.slice(0, 20) : []; this.results.set(items); this.searching.set(false); },
         error: () => { this.results.set([]); this.searching.set(false); }
       });
+  }
+
+  ngOnInit() {
+    this.loadTotalStudentCount();
+  }
+
+  private loadTotalStudentCount() {
+    this.api.getStudentCount().subscribe({
+      next: (response) => {
+        this.totalRecords.set(response.totalRecords);
+      },
+      error: (error) => {
+        console.error('Failed to load student count:', error);
+        this.totalRecords.set(0);
+      }
+    });
   }
 
   onSearch(ev: Event) {
@@ -459,6 +484,8 @@ export class AdminStudentEditorComponent {
       next: (res) => {
         if (res?.insertId && !this.form.value.StudentID) {
           this.form.patchValue({ StudentID: res.insertId });
+          // Refresh count after new student is added
+          this.loadTotalStudentCount();
         }
         alert('Saved successfully.');
       },
