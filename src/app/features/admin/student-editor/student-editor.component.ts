@@ -13,10 +13,10 @@ import { Subject, of } from 'rxjs';
   styles: [
     `:host { display:block; }
      .editor-root { display:flex; flex-direction:column; gap:16px; }
-     .search-card { padding:16px; background:#F2F4F7; border:1px solid #0B4F6C; border-radius:12px; }
+     .search-card { padding:16px; background:#E6EAEE; border:1px solid #0B4F6C; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
      .form-sections { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:16px; }
      @media (max-width: 1100px) { .form-sections { grid-template-columns: 1fr; } }
-     .fieldset-card { background:#F2F4F7; border:1px solid #0B4F6C; border-radius:12px; padding:16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+     .fieldset-card { background:#E6EAEE; border:1px solid #0B4F6C; border-radius:12px; padding:16px; box-shadow: 0 6px 14px rgba(0,0,0,0.10); }
      .section-title { margin:0 0 8px 0; font-weight:700; color:#0B4F6C; }
      .field-grid { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:12px; }
      @media (max-width: 800px) { .field-grid { grid-template-columns: 1fr; } }
