@@ -37,8 +37,33 @@ interface SimulatedCheckins {
     <div *ngIf="student() && !loading() && !error()" class="route-enter">
       <!-- Header Card -->
       <div class="app-card" style="padding: 16px; display: flex; align-items: center; gap: 16px;">
-        <div [title]="student()!.StudentName" style="width: 92px; height: 92px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; color: #fff; background: var(--bah-primary); border: 1px solid var(--bah-border);">
-          {{ initials(student()!.StudentName || '') }}
+        <!-- Student Photo or Fallback -->
+        <div style="width: 92px; height: 92px; border-radius: 12px; border: 1px solid var(--bah-border); overflow: hidden; position: relative;">
+          <!-- Photo Loading State -->
+          <div *ngIf="photoLoading()" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bah-primary); color: #fff;">
+            <div style="font-size: 0.8rem;">Loading...</div>
+          </div>
+
+          <!-- Photo Loaded Successfully -->
+          <img *ngIf="photoUrl() && !photoLoading()"
+               [src]="photoUrl()!"
+               [alt]="student()!.StudentName + ' photo'"
+               [title]="student()!.StudentName"
+               style="width: 100%; height: 100%; object-fit: cover;">
+
+          <!-- No Photo Available -->
+          <div *ngIf="photoError() && !photoLoading()"
+               [title]="student()!.StudentName"
+               style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.7rem; color: var(--bah-text-muted); background: #f8f9fa; text-align: center; padding: 4px;">
+            No Photo
+          </div>
+
+          <!-- Fallback to Initials (if no StudentOpenEMIS_ID) -->
+          <div *ngIf="!student()!.StudentOpenEMIS_ID && !photoLoading()"
+               [title]="student()!.StudentName"
+               style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; color: #fff; background: var(--bah-primary);">
+            {{ initials(student()!.StudentName || '') }}
+          </div>
         </div>
         <div style="flex: 1;">
           <div style="font-weight: 700; font-size: 1.1rem;">{{ student()!.StudentName }}</div>
@@ -247,6 +272,11 @@ export class StudentDetailComponent implements OnInit {
   loading = signal<boolean>(true);
   error = signal<string>('');
 
+  // Photo-related properties
+  photoUrl = signal<string | null>(null);
+  photoLoading = signal<boolean>(false);
+  photoError = signal<boolean>(false);
+
   ngOnInit() {
     const studentId = this.route.snapshot.params['id'];
     if (!studentId || isNaN(Number(studentId))) {
@@ -259,6 +289,8 @@ export class StudentDetailComponent implements OnInit {
       next: (response) => {
         this.student.set(response.student);
         this.loading.set(false);
+        // Load student photo after student data is fetched
+        this.loadStudentPhoto();
       },
       error: (err) => {
         console.error('Failed to load student:', err);
@@ -266,6 +298,49 @@ export class StudentDetailComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  /**
+   * Generates the S3 photo URL based on StudentOpenEMIS_ID
+   */
+  generatePhotoUrl(studentOpenEmisId: string): string {
+    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${studentOpenEmisId}.jpg`;
+  }
+
+  /**
+   * Loads the student photo from S3 and handles errors gracefully
+   */
+  loadStudentPhoto(): void {
+    const student = this.student();
+    if (!student?.StudentOpenEMIS_ID) {
+      this.photoError.set(true);
+      return;
+    }
+
+    this.photoLoading.set(true);
+    this.photoError.set(false);
+
+    const photoUrl = this.generatePhotoUrl(student.StudentOpenEMIS_ID);
+
+    // Create an image element to test if the photo exists
+    const img = new Image();
+
+    img.onload = () => {
+      // Photo loaded successfully
+      this.photoUrl.set(photoUrl);
+      this.photoLoading.set(false);
+      this.photoError.set(false);
+    };
+
+    img.onerror = () => {
+      // Photo failed to load
+      this.photoUrl.set(null);
+      this.photoLoading.set(false);
+      this.photoError.set(true);
+    };
+
+    // Start loading the image
+    img.src = photoUrl;
   }
 
   qrValue(): string {
