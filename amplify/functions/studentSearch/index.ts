@@ -1,4 +1,6 @@
 import mysql from 'mysql2/promise';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let pool: mysql.Pool | null = null;
 
@@ -39,6 +41,7 @@ function isStudentsBySchoolRoute(path: string) { return path.endsWith('/students
 function isSchoolStatsRoute(path: string) { return path.endsWith('/students/school-stats'); }
 function isStudentByIdRoute(path: string) { return path.match(/\/students\/\d+$/); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
+function isPhotoUploadRoute(path: string) { return path.endsWith('/photos/presigned-url'); }
 
 export const handler = async (event: any) => {
   try {
@@ -274,6 +277,46 @@ export const handler = async (event: any) => {
         }
       } else {
         return resp(400, { message: 'StudentID or StudentOpenEMIS_ID is required' });
+      }
+    }
+
+    if (isPhotoUploadRoute(route)) {
+      if (method !== 'POST') return resp(405, { message: 'Method not allowed' });
+
+      const bodyRaw = event.body || '{}';
+      const payload = typeof bodyRaw === 'string' ? JSON.parse(bodyRaw) : bodyRaw;
+
+      if (!payload.studentOpenEmisId) {
+        return resp(400, { message: 'studentOpenEmisId is required' });
+      }
+
+      try {
+        // Create S3 client
+        const s3Client = new S3Client({
+          region: 'us-east-1', // Same region as the bucket
+        });
+
+        const bucketName = 'schoollink-student-photos';
+        const key = `student-photos/${payload.studentOpenEmisId}.jpg`;
+
+        // Create presigned URL for PUT operation
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          ContentType: 'image/jpeg',
+        });
+
+        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 }); // 5 minutes
+
+        return resp(200, {
+          presignedUrl,
+          key,
+          bucket: bucketName,
+          photoUrl: `https://${bucketName}.s3.amazonaws.com/${key}`
+        });
+      } catch (error: any) {
+        console.error('Error generating presigned URL:', error);
+        return resp(500, { message: 'Failed to generate presigned URL', error: error.message });
       }
     }
 

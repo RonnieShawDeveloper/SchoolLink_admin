@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { S3Client, PutObjectCommand, HeadObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
 
 export interface PhotoUploadResult {
   success: boolean;
@@ -21,17 +21,16 @@ export interface PhotoUrlResult {
 export class StudentPhotoService {
   private readonly BUCKET_NAME = 'schoollink-student-photos';
   private readonly BUCKET_PATH = 'student-photos/';
-  private readonly s3Client: S3Client;
+  private readonly API_BASE_URL: string;
 
-  constructor() {
-    this.s3Client = new S3Client({
-      region: 'us-east-1', // Same region as the bucket
-      // Credentials will be handled by AWS SDK credential chain
-    });
+  constructor(private http: HttpClient) {
+    // Get API base URL from amplify outputs
+    const amplifyOutputs = (window as any).amplifyOutputs;
+    this.API_BASE_URL = amplifyOutputs?.custom?.STUDENT_API_BASE || 'https://bnh63mkvcwh724nh6ny6g3qpdy0azdsk.lambda-url.us-east-1.on.aws';
   }
 
   /**
-   * Uploads a student photo to S3 using the StudentOpenEMIS_ID as the filename
+   * Uploads a student photo to S3 using presigned URLs via Lambda function
    * @param studentOpenEmisId The student's OpenEMIS ID
    * @param photoBlob The photo as a Blob
    * @returns Observable with upload result
@@ -41,19 +40,27 @@ export class StudentPhotoService {
       return of({ success: false, error: 'Student OpenEMIS ID is required' });
     }
 
-    const key = `${this.BUCKET_PATH}${studentOpenEmisId}.jpg`;
-
-    const command = new PutObjectCommand({
-      Bucket: this.BUCKET_NAME,
-      Key: key,
-      Body: photoBlob,
-      ContentType: 'image/jpeg',
-    });
-
-    return from(this.s3Client.send(command)).pipe(
-      map(() => {
-        const photoUrl = this.generatePhotoUrl(studentOpenEmisId);
-        return { success: true, photoUrl };
+    // First, get presigned URL from Lambda function
+    return this.http.post<any>(`${this.API_BASE_URL}/photos/presigned-url`, {
+      studentOpenEmisId: studentOpenEmisId
+    }).pipe(
+      switchMap((response) => {
+        // Use the presigned URL to upload the photo
+        return from(fetch(response.presignedUrl, {
+          method: 'PUT',
+          body: photoBlob,
+          headers: {
+            'Content-Type': 'image/jpeg'
+          }
+        }));
+      }),
+      switchMap((uploadResponse) => {
+        if (uploadResponse.ok) {
+          const photoUrl = this.generatePhotoUrl(studentOpenEmisId);
+          return of({ success: true, photoUrl });
+        } else {
+          throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+        }
       }),
       catchError((error) => {
         console.error('Error uploading student photo:', error);
@@ -75,17 +82,13 @@ export class StudentPhotoService {
       return of({ success: false, error: 'Student OpenEMIS ID is required' });
     }
 
-    const key = `${this.BUCKET_PATH}${studentOpenEmisId}.jpg`;
+    const photoUrl = this.generatePhotoUrl(studentOpenEmisId);
 
-    const command = new HeadObjectCommand({
-      Bucket: this.BUCKET_NAME,
-      Key: key
-    });
-
-    return from(this.s3Client.send(command)).pipe(
-      map(() => ({
+    // Check if photo exists by making HEAD request to the public URL
+    return this.http.head(photoUrl, { observe: 'response' }).pipe(
+      map((response) => ({
         success: true,
-        photoUrl: this.generatePhotoUrl(studentOpenEmisId)
+        photoUrl: photoUrl
       })),
       catchError((error) => {
         // Photo doesn't exist or other error
@@ -100,6 +103,7 @@ export class StudentPhotoService {
 
   /**
    * Deletes a student's photo from S3
+   * Note: For this proof of concept, deletion is not implemented
    * @param studentOpenEmisId The student's OpenEMIS ID
    * @returns Observable with deletion result
    */
@@ -108,23 +112,13 @@ export class StudentPhotoService {
       return of({ success: false, error: 'Student OpenEMIS ID is required' });
     }
 
-    const key = `${this.BUCKET_PATH}${studentOpenEmisId}.jpg`;
-
-    const command = new DeleteObjectCommand({
-      Bucket: this.BUCKET_NAME,
-      Key: key
+    // For proof of concept, we don't implement deletion
+    // In a full implementation, this would call a Lambda endpoint for secure deletion
+    console.warn('Photo deletion not implemented in proof of concept');
+    return of({
+      success: false,
+      error: 'Photo deletion not implemented in proof of concept'
     });
-
-    return from(this.s3Client.send(command)).pipe(
-      map(() => ({ success: true })),
-      catchError((error) => {
-        console.error('Error deleting student photo:', error);
-        return of({
-          success: false,
-          error: `Failed to delete photo: ${error.message || 'Unknown error'}`
-        });
-      })
-    );
   }
 
   /**
