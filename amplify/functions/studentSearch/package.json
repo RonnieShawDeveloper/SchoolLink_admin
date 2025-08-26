@@ -5,7 +5,6 @@
   "type": "module",
   "dependencies": {
     "mysql2": "^3.11.0",
-    "@aws-sdk/client-s3": "^3.876.0",
-    "@aws-sdk/s3-request-presigner": "^3.876.0"
+    "@aws-sdk/client-s3": "^3.876.0"
   }
 }

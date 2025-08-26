@@ -1,6 +1,5 @@
 import mysql from 'mysql2/promise';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let pool: mysql.Pool | null = null;
 
@@ -284,10 +283,35 @@ export const handler = async (event: any) => {
       if (method !== 'POST') return resp(405, { message: 'Method not allowed' });
 
       const bodyRaw = event.body || '{}';
-      const payload = typeof bodyRaw === 'string' ? JSON.parse(bodyRaw) : bodyRaw;
+      let payload: any;
+      let photoBuffer: Buffer;
 
-      if (!payload.studentOpenEmisId) {
-        return resp(400, { message: 'studentOpenEmisId is required' });
+      // Handle both JSON and binary data
+      if (event.isBase64Encoded) {
+        // Binary data (photo upload)
+        const studentOpenEmisId = event.queryStringParameters?.studentOpenEmisId;
+        if (!studentOpenEmisId) {
+          return resp(400, { message: 'studentOpenEmisId query parameter is required for binary upload' });
+        }
+        photoBuffer = Buffer.from(bodyRaw, 'base64');
+        payload = { studentOpenEmisId };
+      } else {
+        // JSON data (requesting upload capability)
+        payload = typeof bodyRaw === 'string' ? JSON.parse(bodyRaw) : bodyRaw;
+        if (!payload.studentOpenEmisId) {
+          return resp(400, { message: 'studentOpenEmisId is required' });
+        }
+
+        // Return upload instructions for the frontend
+        const bucketName = 'schoollink-student-photos';
+        const key = `student-photos/${payload.studentOpenEmisId}.jpg`;
+        return resp(200, {
+          uploadUrl: `${event.requestContext?.http?.path || event.path}?studentOpenEmisId=${payload.studentOpenEmisId}`,
+          key,
+          bucket: bucketName,
+          photoUrl: `https://${bucketName}.s3.amazonaws.com/${key}`,
+          message: 'Send binary photo data to uploadUrl with Content-Type: image/jpeg'
+        });
       }
 
       try {
@@ -299,24 +323,26 @@ export const handler = async (event: any) => {
         const bucketName = 'schoollink-student-photos';
         const key = `student-photos/${payload.studentOpenEmisId}.jpg`;
 
-        // Create presigned URL for PUT operation
+        // Upload photo directly to S3 using Lambda's IAM permissions
         const command = new PutObjectCommand({
           Bucket: bucketName,
           Key: key,
+          Body: photoBuffer,
           ContentType: 'image/jpeg',
         });
 
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 }); // 5 minutes
+        await s3Client.send(command);
 
         return resp(200, {
-          presignedUrl,
+          success: true,
           key,
           bucket: bucketName,
-          photoUrl: `https://${bucketName}.s3.amazonaws.com/${key}`
+          photoUrl: `https://${bucketName}.s3.amazonaws.com/${key}`,
+          message: 'Photo uploaded successfully'
         });
       } catch (error: any) {
-        console.error('Error generating presigned URL:', error);
-        return resp(500, { message: 'Failed to generate presigned URL', error: error.message });
+        console.error('Error uploading photo to S3:', error);
+        return resp(500, { message: 'Failed to upload photo', error: error.message });
       }
     }
 

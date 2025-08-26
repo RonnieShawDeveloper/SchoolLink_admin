@@ -40,26 +40,17 @@ export class StudentPhotoService {
       return of({ success: false, error: 'Student OpenEMIS ID is required' });
     }
 
-    // First, get presigned URL from Lambda function
-    return this.http.post<any>(`${this.API_BASE_URL}/photos/presigned-url`, {
-      studentOpenEmisId: studentOpenEmisId
+    // Use Lambda function for direct photo upload
+    return this.http.post(`${this.API_BASE_URL}/photos/presigned-url?studentOpenEmisId=${studentOpenEmisId}`, photoBlob, {
+      headers: {
+        'Content-Type': 'image/jpeg'
+      }
     }).pipe(
-      switchMap((response) => {
-        // Use the presigned URL to upload the photo
-        return from(fetch(response.presignedUrl, {
-          method: 'PUT',
-          body: photoBlob,
-          headers: {
-            'Content-Type': 'image/jpeg'
-          }
-        }));
-      }),
-      switchMap((uploadResponse) => {
-        if (uploadResponse.ok) {
-          const photoUrl = this.generatePhotoUrl(studentOpenEmisId);
-          return of({ success: true, photoUrl });
+      map((response: any) => {
+        if (response.success) {
+          return { success: true, photoUrl: response.photoUrl };
         } else {
-          throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+          throw new Error(response.message || 'Upload failed');
         }
       }),
       catchError((error) => {
