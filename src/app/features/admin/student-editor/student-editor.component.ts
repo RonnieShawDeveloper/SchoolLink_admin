@@ -122,7 +122,7 @@ import { StudentPhotoService } from '../../../core/services/student-photo.servic
                 <span *ngIf="!loadingPhoto()">📸 Take Photo</span>
               </button>
             </div>
-            <!-- Form Fields -->
+            <!-- Form Fields - First 4 fields next to photo -->
             <div class="field-grid">
             <div class="field"><label class="field-label">SchoolLink ID</label><input
               class="app-input" formControlName="StudentID" type="number" [disabled]="true"/></div>
@@ -132,6 +132,11 @@ import { StudentPhotoService } from '../../../core/services/student-photo.servic
               class="app-input" formControlName="StudentName"/></div>
             <div class="field"><label class="field-label">Student Status</label><input
               class="app-input" formControlName="StudentStatus"/></div>
+            </div>
+          </div>
+
+          <!-- Additional fields below photo at full width -->
+          <div class="field-grid" style="margin-top: 16px;">
             <div class="field"><label class="field-label">Gender</label><input class="app-input"
                                                                                formControlName="Gender"/>
             </div>
@@ -160,7 +165,6 @@ import { StudentPhotoService } from '../../../core/services/student-photo.servic
             <div class="field" style="grid-column:1 / -1;"><label class="field-label">Extra
               Activities</label><textarea class="app-input" formControlName="ExtraActivities"
                                           rows="2"></textarea></div>
-            </div>
           </div>
         </section>
 
