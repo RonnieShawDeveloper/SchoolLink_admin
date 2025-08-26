@@ -1,5 +1,6 @@
-import { defineBackend, defineFunction, defineStorage } from '@aws-amplify/backend';
+import { defineBackend, defineFunction } from '@aws-amplify/backend';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { storage } from './storage/resource';
 
 // Define the Get Student Lambda (studentSearch) using environment variables for DB access
 const studentSearchFn = defineFunction({
@@ -15,17 +16,6 @@ const studentSearchFn = defineFunction({
     DB_SSL: process.env.DB_SSL || 'true',
     DB_CHARSET: process.env.DB_CHARSET || 'utf8mb4',
   },
-});
-
-// Define storage configuration for student photos
-const storage = defineStorage({
-  name: 'studentPhotos',
-  access: (allow) => ({
-    'student-photos/*': [
-      allow.guest.to(['read']),
-      allow.authenticated.to(['read', 'write', 'delete'])
-    ]
-  })
 });
 
 export const backend = defineBackend({
