@@ -6,11 +6,13 @@ import { StudentData } from '../../../core/models/student-data';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject, of } from 'rxjs';
 import { AcademicUpdateDialogComponent } from '../../../shared/components/academic-update-dialog/academic-update-dialog.component';
+import { WebcamCaptureComponent, PhotoCaptureResult } from '../../../shared/components/webcam-capture/webcam-capture.component';
+import { StudentPhotoService } from '../../../core/services/student-photo.service';
 
 @Component({
   selector: 'app-admin-student-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AcademicUpdateDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, AcademicUpdateDialogComponent, WebcamCaptureComponent],
   styles: [
     `:host { display:block; }
      .editor-root { display:flex; flex-direction:column; gap:16px; }
@@ -29,6 +31,20 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
      .btn-secondary { background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.15s ease; }
      .btn-secondary:hover { background: #545b62; }
      .btn-secondary:disabled { background: #adb5bd; cursor: not-allowed; }
+
+     /* Photo Section Styles */
+     .student-info-container { display: flex; gap: 20px; }
+     @media (max-width: 900px) { .student-info-container { flex-direction: column; } }
+     .photo-section { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+     .photo-container { width: 120px; height: 120px; border: 2px solid #0B4F6C; border-radius: 50%; overflow: hidden; background: #f8f9fa; display: flex; align-items: center; justify-content: center; }
+     .student-photo { width: 100%; height: 100%; object-fit: cover; }
+     .no-photo-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #6c757d; text-align: center; }
+     .no-photo-icon { font-size: 40px; margin-bottom: 4px; }
+     .no-photo-text { font-size: 12px; font-weight: 600; }
+     .btn-take-photo { background: #0B4F6C; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-weight: 500; font-size: 12px; transition: all 0.15s ease; white-space: nowrap; }
+     .btn-take-photo:hover { background: #094260; }
+     .btn-take-photo:disabled { background: #adb5bd; cursor: not-allowed; }
+     .field-grid { flex: 1; min-width: 0; }
     `
   ],
   template: `
@@ -80,7 +96,34 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
         <!-- Student Personal Information -->
         <section class="fieldset-card">
           <h3 class="section-title">Student Personal Information</h3>
-          <div class="field-grid">
+          <div class="student-info-container">
+            <!-- Photo Section -->
+            <div class="photo-section">
+              <div class="photo-container">
+                <img
+                  *ngIf="studentPhotoUrl(); else noPhotoTemplate"
+                  [src]="studentPhotoUrl()"
+                  alt="Student Photo"
+                  class="student-photo"
+                  (error)="onPhotoError()" />
+                <ng-template #noPhotoTemplate>
+                  <div class="no-photo-placeholder">
+                    <div class="no-photo-icon">👤</div>
+                    <div class="no-photo-text">No Photo</div>
+                  </div>
+                </ng-template>
+              </div>
+              <button
+                type="button"
+                class="btn-take-photo"
+                (click)="openPhotoCapture()"
+                [disabled]="!formEnabled() || loadingPhoto()">
+                <span *ngIf="loadingPhoto()">Loading...</span>
+                <span *ngIf="!loadingPhoto()">📸 Take Photo</span>
+              </button>
+            </div>
+            <!-- Form Fields -->
+            <div class="field-grid">
             <div class="field"><label class="field-label">SchoolLink ID</label><input
               class="app-input" formControlName="StudentID" type="number" [disabled]="true"/></div>
             <div class="field"><label class="field-label">Student OpenEMIS ID</label><input
@@ -117,6 +160,7 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
             <div class="field" style="grid-column:1 / -1;"><label class="field-label">Extra
               Activities</label><textarea class="app-input" formControlName="ExtraActivities"
                                           rows="2"></textarea></div>
+            </div>
           </div>
         </section>
 
@@ -310,7 +354,14 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
         </section>
       </div>
 
-      <!-- Academic Update Dialog -->
+      <!-- Webcam Capture Modal -->
+      <app-webcam-capture
+        *ngIf="showWebcam()"
+        [studentOpenEmisId]="form.get('StudentOpenEMIS_ID')?.value || ''"
+        (photoUploaded)="onPhotoUploaded($event)"
+        (closed)="closePhotoCapture()">
+      </app-webcam-capture>
+
       <app-academic-update-dialog
         *ngIf="showAcademicDialog()"
         [currentData]="getCurrentAcademicData()"
@@ -323,6 +374,7 @@ import { AcademicUpdateDialogComponent } from '../../../shared/components/academ
 export class AdminStudentEditorComponent implements OnInit {
   private readonly api = inject(StudentApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly photoService = inject(StudentPhotoService);
 
   form: FormGroup = this.fb.group({
     // basics
@@ -414,6 +466,11 @@ export class AdminStudentEditorComponent implements OnInit {
   loadingSchools = signal<boolean>(false);
   pendingSchoolData: SchoolOption | null = null;
   lastQuery = '';
+
+  // Photo-related signals
+  studentPhotoUrl = signal<string>('');
+  loadingPhoto = signal<boolean>(false);
+  showWebcam = signal<boolean>(false);
 
   constructor() {
     this.search$
@@ -660,12 +717,18 @@ export class AdminStudentEditorComponent implements OnInit {
 
     this.form.reset({ ...formattedData });
     this.formEnabled.set(true);
+
+    // Load student photo
+    this.loadStudentPhoto();
   }
 
   newStudent() {
     this.results.set([]);
     this.form.reset({ StudentID: null });
     this.formEnabled.set(true);
+
+    // Clear photo for new student
+    this.studentPhotoUrl.set('');
   }
 
   save() {
@@ -699,5 +762,60 @@ export class AdminStudentEditorComponent implements OnInit {
         alert('Save failed: ' + (err?.message || 'Unknown error'));
       }
     });
+  }
+
+  // Photo-related methods
+  private loadStudentPhoto() {
+    const studentOpenEmisId = this.form.get('StudentOpenEMIS_ID')?.value;
+    if (!studentOpenEmisId) {
+      this.studentPhotoUrl.set('');
+      return;
+    }
+
+    this.loadingPhoto.set(true);
+    this.photoService.getStudentPhotoUrl(studentOpenEmisId).subscribe({
+      next: (result) => {
+        this.loadingPhoto.set(false);
+        if (result.success && result.photoUrl) {
+          this.studentPhotoUrl.set(result.photoUrl);
+        } else {
+          this.studentPhotoUrl.set('');
+        }
+      },
+      error: (err) => {
+        this.loadingPhoto.set(false);
+        console.warn('Failed to load student photo:', err);
+        this.studentPhotoUrl.set('');
+      }
+    });
+  }
+
+  openPhotoCapture() {
+    const studentOpenEmisId = this.form.get('StudentOpenEMIS_ID')?.value;
+    if (!studentOpenEmisId) {
+      alert('Student OpenEMIS ID is required to take a photo');
+      return;
+    }
+    this.showWebcam.set(true);
+  }
+
+  closePhotoCapture() {
+    this.showWebcam.set(false);
+  }
+
+  onPhotoUploaded(result: PhotoCaptureResult) {
+    if (result.success) {
+      // Refresh the photo display
+      this.loadStudentPhoto();
+      alert('Photo uploaded successfully!');
+    } else {
+      alert('Failed to upload photo: ' + (result.error || 'Unknown error'));
+    }
+    this.closePhotoCapture();
+  }
+
+  onPhotoError() {
+    // Handle photo loading error (e.g., image not found, network error)
+    this.studentPhotoUrl.set('');
   }
 }
