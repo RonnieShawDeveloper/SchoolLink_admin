@@ -1,6 +1,5 @@
 import { defineBackend, defineFunction } from '@aws-amplify/backend';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { storage } from './storage/resource';
 
 // Define the Get Student Lambda (studentSearch) using environment variables for DB access
 const studentSearchFn = defineFunction({
@@ -20,7 +19,6 @@ const studentSearchFn = defineFunction({
 
 export const backend = defineBackend({
   studentSearchFn,
-  storage,
 });
 
 // Attach a public Function URL (DEV only). Lock down later in prod.
