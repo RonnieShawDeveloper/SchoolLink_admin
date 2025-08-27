@@ -1,0 +1,13 @@
+{
+  "name": "student-photo-thumbnail-generator",
+  "version": "1.0.0",
+  "description": "Generates thumbnails for student photos uploaded to S3",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1400.0",
+    "jimp": "^0.22.12"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
