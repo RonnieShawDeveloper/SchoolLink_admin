@@ -284,9 +284,9 @@ export class StudentsListComponent implements OnInit {
 
   getFallbackDataUrl(): string {
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'>
-  <rect width='100%' height='100%' rx='8' ry='8' fill='%23f8f9fa'/>
-  <line x1='15' y1='15' x2='45' y2='45' stroke='%23dc3545' stroke-width='6' stroke-linecap='round'/>
-  <line x1='45' y1='15' x2='15' y2='45' stroke='%23dc3545' stroke-width='6' stroke-linecap='round'/>
+  <rect width='100%' height='100%' rx='8' ry='8' fill='#f8f9fa'/>
+  <line x1='15' y1='15' x2='45' y2='45' stroke='#dc3545' stroke-width='6' stroke-linecap='round'/>
+  <line x1='45' y1='15' x2='15' y2='45' stroke='#dc3545' stroke-width='6' stroke-linecap='round'/>
 </svg>`;
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
