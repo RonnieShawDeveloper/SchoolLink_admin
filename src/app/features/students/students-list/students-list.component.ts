@@ -107,9 +107,19 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
                        style="cursor: pointer;">
               </td>
               <td style="padding:8px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span>{{ s.StudentName }}</span>
-                  <span [ngStyle]="getGenderStyle(s.Gender)">{{ getGenderText(s.Gender) }}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 36px; height: 36px; border-radius: 8px; overflow: hidden; border: 1px solid var(--bah-border); flex: 0 0 36px; background: #f8f9fa;">
+                    <img
+                      [src]="s.StudentOpenEMIS_ID ? buildThumbUrl(s.StudentOpenEMIS_ID) : getFallbackDataUrl()"
+                      (error)="onThumbError($event)"
+                      [alt]="(s.StudentName || 'Student') + ' thumbnail'"
+                      style="width: 100%; height: 100%; object-fit: cover;"
+                    />
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span>{{ s.StudentName }}</span>
+                    <span [ngStyle]="getGenderStyle(s.Gender)">{{ getGenderText(s.Gender) }}</span>
+                  </div>
                 </div>
               </td>
               <td style="padding:8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</td>
@@ -265,6 +275,28 @@ export class StudentsListComponent implements OnInit {
       };
     }
     return {};
+  }
+
+  // Thumbnail helpers
+  buildThumbUrl(id: string): string {
+    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${id}-thumb.jpg`;
+  }
+
+  getFallbackDataUrl(): string {
+    const svg = `\
+<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'>\
+  <rect width='100%' height='100%' fill='%23f0f0f0'/>\
+  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%23999'>No Pic</text>\
+</svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
+  onThumbError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img) return;
+    if ((img as any).dataset && (img as any).dataset.fallbackApplied === '1') return;
+    if ((img as any).dataset) (img as any).dataset.fallbackApplied = '1';
+    img.src = this.getFallbackDataUrl();
   }
 
   // Bulk operation methods
