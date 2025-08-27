@@ -781,7 +781,10 @@ export class AdminStudentEditorComponent implements OnInit {
       next: (result) => {
         this.loadingPhoto.set(false);
         if (result.success && result.photoUrl) {
-          this.studentPhotoUrl.set(result.photoUrl);
+          const url = result.photoUrl;
+          const sep = url.includes('?') ? '&' : '?';
+          // Append a fresh cache-busting param so admin preview updates immediately after upload
+          this.studentPhotoUrl.set(`${url}${sep}r=${Date.now()}`);
         } else {
           this.studentPhotoUrl.set('');
         }

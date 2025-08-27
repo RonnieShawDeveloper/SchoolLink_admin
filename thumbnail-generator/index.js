@@ -49,7 +49,8 @@ exports.handler = async (event) => {
                 Key: thumbnailKey,
                 Body: thumbnailBuffer,
                 ContentType: 'image/jpeg',
-                CacheControl: 'max-age=31536000' // 1 year cache
+                CacheControl: 'no-store, no-cache, must-revalidate, max-age=0',
+                Expires: new Date(0)
             };
 
             await s3.putObject(putObjectParams).promise();

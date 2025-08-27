@@ -88,7 +88,7 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
                        (change)="toggleSelectAll($event)"
                        style="cursor: pointer;">
               </th>
-              <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Name</th>
+              <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Photo and Name</th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Student OpenEMIS ID</th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Grade</th>
               <th style="padding:8px; border-bottom:1px solid var(--bah-border)">Gate In</th>
@@ -142,6 +142,7 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
 })
 export class StudentsListComponent implements OnInit {
   private readonly api = inject(StudentApiService);
+  private readonly cacheBust = Date.now();
 
   selectedSchool = signal<SelectedSchoolData | null>(null);
   students = signal<StudentData[]>([]);
@@ -279,7 +280,7 @@ export class StudentsListComponent implements OnInit {
 
   // Thumbnail helpers
   buildThumbUrl(id: string): string {
-    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${id}-thumb.jpg`;
+    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${id}-thumb.jpg?t=${this.cacheBust}`;
   }
 
   getFallbackDataUrl(): string {

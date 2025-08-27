@@ -267,6 +267,7 @@ interface SimulatedCheckins {
 export class StudentDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(StudentApiService);
+  private readonly cacheBust = Date.now();
 
   student = signal<StudentData | null>(null);
   loading = signal<boolean>(true);
@@ -304,7 +305,7 @@ export class StudentDetailComponent implements OnInit {
    * Generates the S3 photo URL based on StudentOpenEMIS_ID
    */
   generatePhotoUrl(studentOpenEmisId: string): string {
-    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${studentOpenEmisId}.jpg`;
+    return `https://schoollink-student-photos.s3.us-east-1.amazonaws.com/student-photos/${studentOpenEmisId}.jpg?t=${this.cacheBust}`;
   }
 
   /**

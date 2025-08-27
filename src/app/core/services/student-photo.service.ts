@@ -22,6 +22,7 @@ export class StudentPhotoService {
   private readonly BUCKET_NAME = 'schoollink-student-photos';
   private readonly BUCKET_PATH = 'student-photos/';
   private readonly API_BASE_URL: string;
+  private readonly cacheBust = Date.now();
 
   constructor(private http: HttpClient) {
     // Get API base URL from amplify outputs
@@ -120,7 +121,8 @@ export class StudentPhotoService {
    */
   private generatePhotoUrl(studentOpenEmisId: string): string {
     // Using the actual S3 bucket URL for schoollink-student-photos
-    return `https://schoollink-student-photos.s3.amazonaws.com/${this.BUCKET_PATH}${studentOpenEmisId}.jpg`;
+    // Add cache-busting using a stable seed for this service instance
+    return `https://schoollink-student-photos.s3.amazonaws.com/${this.BUCKET_PATH}${studentOpenEmisId}.jpg?t=${this.cacheBust}`;
   }
 
   /**
