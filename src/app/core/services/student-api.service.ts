@@ -43,6 +43,18 @@ export interface SchoolStatistics {
   institutionCode: string;
 }
 
+// Scans API response contracts
+export interface TodayScanItem {
+  student_id: string | number;
+  latestInAt?: string;  // ISO string in school local time or UTC
+  latestOutAt?: string; // ISO string in school local time or UTC
+}
+
+export interface TodayScansResponse {
+  items: TodayScanItem[];
+  timezone?: string; // IANA timezone of conversion if provided by backend
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudentApiService {
   private readonly http = inject(HttpClient);
@@ -129,5 +141,14 @@ export class StudentApiService {
 
   getStudentById(studentId: number): Observable<{ student: StudentData }> {
     return this.http.get<{ student: StudentData }>(`${this.baseUrl()}/students/${studentId}`);
+  }
+
+  // Fetch today's latest Gate In/Out scans for a batch of students in a school
+  getTodayScansBySchool(institutionCode: string, studentOpenEmisIds: (string | number)[]): Observable<TodayScansResponse> {
+    const ids = (studentOpenEmisIds || []).filter(Boolean).map(String);
+    const params = new HttpParams()
+      .set('institutionCode', institutionCode)
+      .set('student_ids', ids.join(','));
+    return this.http.get<TodayScansResponse>(`${this.baseUrl()}/scans/today`, { params });
   }
 }
