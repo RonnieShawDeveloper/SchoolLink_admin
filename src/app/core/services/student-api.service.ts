@@ -109,6 +109,20 @@ export class StudentApiService {
     return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
   }
 
+  // Resolve scans endpoint path or absolute URL based on runtime window.SCANS_TODAY_PATH
+  private resolveScansEndpoint(): string {
+    const w = globalThis as any;
+    const override = (w.SCANS_TODAY_PATH as string) || '/scans/today';
+    // If override is absolute (starts with http), use as-is
+    if (/^https?:\/\//i.test(override)) return override;
+    const base = this.baseUrl();
+    const path = override.replace(/^\/+/, ''); // strip leading slashes on path
+    if (!base) {
+      return `/${path}`; // relative root (useful for local dev proxies)
+    }
+    return `${base}/${path}`;
+  }
+
   searchStudents(q: string, page = 1, limit = 20): Observable<SearchResponse> {
     const params = new HttpParams().set('q', q).set('page', page).set('limit', limit);
     return this.http.get<SearchResponse>(`${this.baseUrl()}/students/search`, { params });
@@ -156,7 +170,7 @@ export class StudentApiService {
       return of({ items: [] });
     }
 
-    const base = this.baseUrl();
+    const endpoint = this.resolveScansEndpoint();
     const chunkSize = 200; // reasonable batch size to keep payloads small and parallelize
 
     const chunks: string[][] = [];
@@ -167,8 +181,8 @@ export class StudentApiService {
 
     // Since inline catchError wasn’t composed above, build explicit observables with fallback per chunk
     const requests = chunks.map(part => {
-      const post$ = this.http.post<TodayScansResponse>(`${base}/scans/today`, { student_ids: part });
-      const get$ = this.http.get<TodayScansResponse>(`${base}/scans/today`, { params: new HttpParams().set('student_ids', part.join(',')) });
+      const post$ = this.http.post<TodayScansResponse>(`${endpoint}`, { student_ids: part });
+      const get$ = this.http.get<TodayScansResponse>(`${endpoint}`, { params: new HttpParams().set('student_ids', part.join(',')) });
       // Return: POST else (if 404) GET
       return post$.pipe(
         catchError((err: any) => {
