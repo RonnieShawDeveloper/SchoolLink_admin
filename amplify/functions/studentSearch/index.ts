@@ -42,7 +42,14 @@ function isStudentByIdRoute(path: string) { return path.match(/\/students\/\d+$/
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 function isPhotoUploadRoute(path: string) { return path.endsWith('/photos/presigned-url'); }
 function isScansTodayRoute(path: string) { return path.endsWith('/scans/today'); }
-function isHealthRoute(path: string) { return path.endsWith('/health'); }
+function isHealthRoute(path: string) {
+  const p = (path || '').toLowerCase();
+  // Treat root and /health as valid health endpoints to be robust across Function URL behaviors
+  if (p === '' || p === '/' || p.endsWith('/health')) return true;
+  // Also handle trailing slashes
+  const trimmed = p.replace(/\/+$/, '');
+  return trimmed === '' || trimmed === '/' || trimmed.endsWith('/health');
+}
 
 export const handler = async (event: any) => {
   try {
