@@ -301,13 +301,51 @@ export class StudentsListComponent implements OnInit {
   getGateInTime(studentOpenEmisId?: string): string | null {
     if (!studentOpenEmisId) return null;
     const scanData = this.studentScans()[studentOpenEmisId];
-    return scanData?.gateIn || null;
+    const utcTimeString = scanData?.gateIn;
+
+    if (!utcTimeString) return null;
+
+    // Convert UTC timestamp to local timezone
+    try {
+      const utcDate = new Date(utcTimeString);
+      return utcDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error converting gate in time:', error);
+      return utcTimeString; // Fallback to original string if conversion fails
+    }
   }
 
   getGateOutTime(studentOpenEmisId?: string): string | null {
     if (!studentOpenEmisId) return null;
     const scanData = this.studentScans()[studentOpenEmisId];
-    return scanData?.gateOut || null;
+    const utcTimeString = scanData?.gateOut;
+
+    if (!utcTimeString) return null;
+
+    // Convert UTC timestamp to local timezone
+    try {
+      const utcDate = new Date(utcTimeString);
+      return utcDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error converting gate out time:', error);
+      return utcTimeString; // Fallback to original string if conversion fails
+    }
   }
 
   // Gender display methods
