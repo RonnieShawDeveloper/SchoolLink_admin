@@ -45,10 +45,7 @@ export const handler = async (event: any) => {
   console.log('Received event:', JSON.stringify(event, null, 2));
 
   const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+    'Content-Type': 'application/json'
   };
 
   // Get HTTP method from Function URL event structure
