@@ -8,8 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "wait:deploy": "node scripts/wait-for-deploy.js",
-    "test:scans": "node scripts/test-scans-endpoint.js",
-    "test:scans:live": "node scripts/wait-for-deploy.js && node scripts/test-scans-endpoint.js"
+    "verify:lambda": "node scripts/verify-lambda-cli.js"
   },
   "prettier": {
     "printWidth": 100,

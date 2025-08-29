@@ -25,9 +25,12 @@ export class StudentPhotoService {
   private readonly cacheBust = Date.now();
 
   constructor(private http: HttpClient) {
-    // Get API base URL from amplify outputs
-    const amplifyOutputs = (window as any).amplifyOutputs;
-    this.API_BASE_URL = amplifyOutputs?.custom?.STUDENT_API_BASE || 'https://bnh63mkvcwh724nh6ny6g3qpdy0azdsk.lambda-url.us-east-1.on.aws';
+    // Resolve API base URL from runtime configuration (injected during build) with safe fallback
+    const w = (window as any) || {};
+    const fromWindow = (w.STUDENT_API_BASE as string) || '';
+    const fromAmplify = w.amplifyOutputs?.custom?.STUDENT_API_BASE || '';
+    const raw = (fromWindow || fromAmplify || '').toString();
+    this.API_BASE_URL = raw.replace(/\/+$/, ''); // strip trailing slashes, avoid double slashes
   }
 
   /**

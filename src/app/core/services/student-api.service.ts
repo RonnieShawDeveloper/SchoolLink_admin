@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, forkJoin, of, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { StudentData } from '../models/student-data';
 
 export interface SearchResponse {
@@ -44,17 +43,6 @@ export interface SchoolStatistics {
   institutionCode: string;
 }
 
-// Scans API response contracts
-export interface TodayScanItem {
-  student_id: string | number;
-  latestInAt?: string;  // ISO string in school local time or UTC
-  latestOutAt?: string; // ISO string in school local time or UTC
-}
-
-export interface TodayScansResponse {
-  items: TodayScanItem[];
-  timezone?: string; // IANA timezone of conversion if provided by backend
-}
 
 @Injectable({ providedIn: 'root' })
 export class StudentApiService {
@@ -110,18 +98,6 @@ export class StudentApiService {
   }
 
   // Resolve scans endpoint path or absolute URL based on runtime window.SCANS_TODAY_PATH
-  private resolveScansEndpoint(): string {
-    const w = globalThis as any;
-    const override = (w.SCANS_TODAY_PATH as string) || '/scans/today';
-    // If override is absolute (starts with http), use as-is
-    if (/^https?:\/\//i.test(override)) return override;
-    const base = this.baseUrl();
-    const path = override.replace(/^\/+/, ''); // strip leading slashes on path
-    if (!base) {
-      return `/${path}`; // relative root (useful for local dev proxies)
-    }
-    return `${base}/${path}`;
-  }
 
   searchStudents(q: string, page = 1, limit = 20): Observable<SearchResponse> {
     const params = new HttpParams().set('q', q).set('page', page).set('limit', limit);
@@ -159,54 +135,4 @@ export class StudentApiService {
     return this.http.get<{ student: StudentData }>(`${this.baseUrl()}/students/${studentId}`);
   }
 
-  // Fetch today's latest Gate In/Out scans for a batch of students (no school filter)
-  getTodayScans(studentOpenEmisIds: (string | number)[]): Observable<TodayScansResponse> {
-    const ids = (studentOpenEmisIds || [])
-      .filter((v) => v !== undefined && v !== null)
-      .map((v) => String(v).trim())
-      .filter((v) => v.length > 0);
-
-    if (ids.length === 0) {
-      return of({ items: [] });
-    }
-
-    const endpoint = this.resolveScansEndpoint();
-    const chunkSize = 200; // reasonable batch size to keep payloads small and parallelize
-
-    const chunks: string[][] = [];
-    for (let i = 0; i < ids.length; i += chunkSize) {
-      chunks.push(ids.slice(i, i + chunkSize));
-    }
-
-
-    // Since inline catchError wasn’t composed above, build explicit observables with fallback per chunk
-    const requests = chunks.map(part => {
-      const post$ = this.http.post<TodayScansResponse>(`${endpoint}`, { student_ids: part });
-      const get$ = this.http.get<TodayScansResponse>(`${endpoint}`, { params: new HttpParams().set('student_ids', part.join(',')) });
-      // Return: POST else (if 404) GET
-      return post$.pipe(
-        catchError((err: any) => {
-          if (err && err.status === 404) {
-            return get$;
-          }
-          return throwError(() => err);
-        })
-      );
-    });
-
-    if (requests.length === 1) {
-      return requests[0];
-    }
-
-    return forkJoin(requests).pipe(
-      map(responses => {
-        const merged: TodayScansResponse = { items: [] };
-        for (const r of responses) {
-          if (r?.items?.length) merged.items.push(...r.items);
-          if (!merged.timezone && r?.timezone) merged.timezone = r.timezone;
-        }
-        return merged;
-      })
-    );
-  }
 }

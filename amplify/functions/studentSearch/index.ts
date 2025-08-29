@@ -41,7 +41,6 @@ function isSchoolStatsRoute(path: string) { return path.endsWith('/students/scho
 function isStudentByIdRoute(path: string) { return path.match(/\/students\/\d+$/); }
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 function isPhotoUploadRoute(path: string) { return path.endsWith('/photos/presigned-url'); }
-function isScansTodayRoute(path: string) { return path.endsWith('/scans/today'); }
 function isHealthRoute(path: string) {
   const p = (path || '').toLowerCase();
   // Treat root and /health as valid health endpoints to be robust across Function URL behaviors
@@ -293,64 +292,6 @@ export const handler = async (event: any) => {
       }
     }
 
-    // Scans today route: GET or POST
-    if (isScansTodayRoute(route)) {
-      if (method !== 'GET' && method !== 'POST') {
-        return resp(405, { message: 'Method not allowed' });
-      }
-
-      // Parse student_ids from POST JSON or GET query string
-      let ids: (string | number)[] = [];
-      try {
-        if (method === 'POST') {
-          const bodyRaw = event.body || '{}';
-          const payload = typeof bodyRaw === 'string' ? JSON.parse(bodyRaw) : bodyRaw;
-          const arr = Array.isArray(payload?.student_ids) ? payload.student_ids : [];
-          ids = arr
-            .filter((v: any) => v !== null && v !== undefined)
-            .map((v: any) => String(v).trim())
-            .filter((s: string) => s.length > 0);
-        } else {
-          const qsIds = (qs.student_ids || '').trim();
-          if (qsIds) ids = qsIds.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
-        }
-      } catch (e: any) {
-        return resp(400, { message: 'Invalid JSON body', error: String(e) });
-      }
-
-      if (!ids.length) {
-        return resp(200, { items: [] });
-      }
-
-      // Query latest scans per student per mode for UTC "today".
-      // Note: We DO NOT filter by school_id. Mode 1 (In), Mode 2 (Out).
-      const numericIds = ids.map((x) => Number(x)).filter((n) => Number.isFinite(n));
-      if (!numericIds.length) return resp(200, { items: [] });
-
-      const sql = `
-        SELECT
-          s.student_id,
-          MAX(CASE WHEN s.mode_id = 1 THEN s.scanned_at END) AS latestInAt,
-          MAX(CASE WHEN s.mode_id = 2 THEN s.scanned_at END) AS latestOutAt
-        FROM SchoolLink.scans s
-        WHERE s.mode_id IN (1,2)
-          AND s.student_id IN (?)
-          AND DATE(s.scanned_at) = UTC_DATE()
-        GROUP BY s.student_id
-      `;
-
-      const [rows]: any = await pool.query(sql, [numericIds]);
-      const items = (rows || []).map((r: any) => {
-        const toIso = (ts?: string) => (ts ? new Date(ts + 'Z').toISOString() : undefined);
-        return {
-          student_id: r.student_id,
-          latestInAt: toIso(r.latestInAt),
-          latestOutAt: toIso(r.latestOutAt),
-        };
-      }).filter((it: any) => it.latestInAt || it.latestOutAt);
-
-      return resp(200, { items });
-    }
 
     if (isPhotoUploadRoute(route)) {
       if (method !== 'POST') return resp(405, { message: 'Method not allowed' });

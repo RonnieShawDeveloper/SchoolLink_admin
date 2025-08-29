@@ -124,8 +124,8 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
               </td>
               <td style="padding:8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</td>
               <td style="padding:8px;">{{ s.EducationGrade }}</td>
-              <td style="padding:8px;">{{ getGateInTime(s.StudentOpenEMIS_ID) }}</td>
-              <td style="padding:8px;">{{ getGateOutTime(s.StudentOpenEMIS_ID) }}</td>
+              <td style="padding:8px; color: var(--bah-text-muted);">—</td>
+              <td style="padding:8px; color: var(--bah-text-muted);">—</td>
               <td style="padding:8px; text-align:right;">
                 <a class="btn-primary"
                    [routerLink]="['/students', s.StudentID]"
@@ -150,7 +150,6 @@ export class StudentsListComponent implements OnInit {
   statistics = signal<SchoolStatistics | null>(null);
   loadingStatistics = signal<boolean>(false);
   selectedStudents = signal<number[]>([]);
-  gateTimes = signal<Record<string, { in?: string; out?: string }>>({});
 
   ngOnInit() {
     // Subscribe to selected school changes
@@ -164,7 +163,6 @@ export class StudentsListComponent implements OnInit {
   private loadStudentsForSchool(school: SelectedSchoolData | null) {
     if (!school) {
       this.students.set([]);
-      this.gateTimes.set({});
       return;
     }
 
@@ -174,77 +172,15 @@ export class StudentsListComponent implements OnInit {
         const items = response.items || [];
         this.students.set(items);
         this.loading.set(false);
-        this.loadScansForStudents(items);
       },
       error: (error) => {
         console.error('Failed to load students for school:', error);
         this.students.set([]);
-        this.gateTimes.set({});
         this.loading.set(false);
       }
     });
   }
 
-  private loadScansForStudents(students: StudentData[]): void {
-    const ids = (students || []).map(s => s.StudentOpenEMIS_ID).filter((v): v is string => !!v);
-    if (ids.length === 0) {
-      this.gateTimes.set({});
-      return;
-    }
-    this.api.getTodayScans(ids).subscribe({
-      next: (res) => {
-        const map: Record<string, { in?: string; out?: string }> = {};
-        const tz = (res as any)?.timezone as string | undefined;
-        const items = (res && (res as any).items) || [];
-        for (const it of items) {
-          const key = String(it.student_id).trim();
-          const inStr = this.formatLocal12h(it.latestInAt, tz);
-          const outStr = this.formatLocal12h(it.latestOutAt, tz);
-          map[key] = {};
-          if (inStr) map[key].in = inStr;
-          if (outStr) map[key].out = outStr;
-        }
-        this.gateTimes.set(map);
-      },
-      error: (err) => {
-        console.error('Failed to load today\'s scans:', err);
-        this.gateTimes.set({});
-      }
-    });
-  }
-
-  private formatLocal12h(ts?: string, timezone?: string): string | undefined {
-    if (!ts) return undefined;
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return undefined;
-    try {
-      const opts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-      if (timezone) (opts as any).timeZone = timezone;
-      return new Intl.DateTimeFormat('en-US', opts).format(d);
-    } catch {
-      // Fallback simple manual formatting if locale or IANA tz fails
-      const hours = d.getHours();
-      const minutes = d.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const h12 = hours % 12 || 12;
-      const mm = minutes.toString().padStart(2, '0');
-      return `${h12}:${mm} ${ampm}`;
-    }
-  }
-
-  getGateInTime(studentOpenEmisId?: string): string {
-    const key = (studentOpenEmisId || '').trim();
-    if (!key) return '—';
-    const map = this.gateTimes();
-    return (map[key]?.in) || '—';
-  }
-
-  getGateOutTime(studentOpenEmisId?: string): string {
-    const key = (studentOpenEmisId || '').trim();
-    if (!key) return '—';
-    const map = this.gateTimes();
-    return (map[key]?.out) || '—';
-  }
 
   private loadStatisticsForSchool(school: SelectedSchoolData | null) {
     if (!school) {
