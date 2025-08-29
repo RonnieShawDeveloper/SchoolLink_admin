@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, forkJoin, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, forkJoin, of, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { StudentData } from '../models/student-data';
 
 export interface SearchResponse {
@@ -164,9 +164,21 @@ export class StudentApiService {
       chunks.push(ids.slice(i, i + chunkSize));
     }
 
-    const requests = chunks.map(part => this.http.post<TodayScansResponse>(`${base}/scans/today`, {
-      student_ids: part
-    }));
+
+    // Since inline catchError wasn’t composed above, build explicit observables with fallback per chunk
+    const requests = chunks.map(part => {
+      const post$ = this.http.post<TodayScansResponse>(`${base}/scans/today`, { student_ids: part });
+      const get$ = this.http.get<TodayScansResponse>(`${base}/scans/today`, { params: new HttpParams().set('student_ids', part.join(',')) });
+      // Return: POST else (if 404) GET
+      return post$.pipe(
+        catchError((err: any) => {
+          if (err && err.status === 404) {
+            return get$;
+          }
+          return throwError(() => err);
+        })
+      );
+    });
 
     if (requests.length === 1) {
       return requests[0];

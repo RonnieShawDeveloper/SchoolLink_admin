@@ -197,7 +197,7 @@ export class StudentsListComponent implements OnInit {
         const tz = (res as any)?.timezone as string | undefined;
         const items = (res && (res as any).items) || [];
         for (const it of items) {
-          const key = String(it.student_id);
+          const key = String(it.student_id).trim();
           const inStr = this.formatLocal12h(it.latestInAt, tz);
           const outStr = this.formatLocal12h(it.latestOutAt, tz);
           map[key] = {};
@@ -233,15 +233,17 @@ export class StudentsListComponent implements OnInit {
   }
 
   getGateInTime(studentOpenEmisId?: string): string {
-    if (!studentOpenEmisId) return '—';
+    const key = (studentOpenEmisId || '').trim();
+    if (!key) return '—';
     const map = this.gateTimes();
-    return (map[studentOpenEmisId]?.in) || '—';
+    return (map[key]?.in) || '—';
   }
 
   getGateOutTime(studentOpenEmisId?: string): string {
-    if (!studentOpenEmisId) return '—';
+    const key = (studentOpenEmisId || '').trim();
+    if (!key) return '—';
     const map = this.gateTimes();
-    return (map[studentOpenEmisId]?.out) || '—';
+    return (map[key]?.out) || '—';
   }
 
   private loadStatisticsForSchool(school: SelectedSchoolData | null) {
