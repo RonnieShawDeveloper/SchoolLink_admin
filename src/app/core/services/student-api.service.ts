@@ -106,14 +106,18 @@ export class StudentApiService {
     // Configure this at runtime by setting window.STUDENT_API_BASE in index.html or via hosting env.
     // Example: https://abc123.execute-api.us-east-1.amazonaws.com/prod
     const w = globalThis as any;
-    const raw = (w.STUDENT_API_BASE as string) || '';
+    const fromWindow = (w.STUDENT_API_BASE as string) || '';
+    const fromAmplify = w.amplifyOutputs?.custom?.STUDENT_API_BASE || '';
+    const raw = (fromWindow || fromAmplify || '').toString();
     return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
   }
 
   private scansBaseUrl(): string {
     // Configure this at runtime by setting window.STUDENT_SCANS_API_BASE in index.html or via hosting env.
     const w = globalThis as any;
-    const raw = (w.STUDENT_SCANS_API_BASE as string) || '';
+    const fromWindow = (w.STUDENT_SCANS_API_BASE as string) || '';
+    const fromAmplify = w.amplifyOutputs?.custom?.STUDENT_SCANS_API_BASE || '';
+    const raw = (fromWindow || fromAmplify || '').toString();
     return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
   }
 
