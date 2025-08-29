@@ -18,8 +18,25 @@ const studentSearchFn = defineFunction({
   },
 });
 
+// Define the Student Scans Lambda (studentScans) using environment variables for DB access
+const studentScansFn = defineFunction({
+  name: 'studentScans',
+  runtime: 20, // Node.js 20
+  entry: './functions/studentScans/index.ts',
+  environment: {
+    DB_HOST: process.env.DB_HOST || '',
+    DB_PORT: process.env.DB_PORT || '3306',
+    DB_USER: process.env.DB_USER || '',
+    DB_PASSWORD: process.env.DB_PASSWORD || '',
+    DB_NAME: process.env.DB_NAME || '',
+    DB_SSL: process.env.DB_SSL || 'true',
+    DB_CHARSET: process.env.DB_CHARSET || 'utf8mb4',
+  },
+});
+
 export const backend = defineBackend({
   studentSearchFn,
+  studentScansFn,
 });
 
 // Add S3 permissions to the Lambda function for photo uploads
@@ -48,9 +65,20 @@ const studentSearchFnUrl = backend.studentSearchFn.resources.lambda.addFunctionU
   },
 });
 
-// Expose the Function URL to the frontend build via amplify_outputs.json
+// Attach a public Function URL for studentScans function
+const studentScansFnUrl = backend.studentScansFn.resources.lambda.addFunctionUrl({
+  authType: lambda.FunctionUrlAuthType.NONE,
+  cors: {
+    allowedOrigins: ['*'],
+    allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
+    allowedHeaders: ['*'],
+  },
+});
+
+// Expose the Function URLs to the frontend build via amplify_outputs.json
 backend.addOutput({
   custom: {
     STUDENT_API_BASE: studentSearchFnUrl.url.replace(/\/$/, ''),
+    STUDENT_SCANS_API_BASE: studentScansFnUrl.url.replace(/\/$/, ''),
   }
 });

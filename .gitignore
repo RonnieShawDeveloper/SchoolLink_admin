@@ -45,3 +45,6 @@ Thumbs.db
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# thumbnail-generator node_modules
+thumbnail-generator/node_modules/

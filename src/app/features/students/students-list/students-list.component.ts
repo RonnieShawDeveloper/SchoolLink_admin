@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { StudentData } from '../../../core/models/student-data';
-import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../../core/services/student-api.service';
+import { StudentApiService, SelectedSchoolData, SchoolStatistics, StudentScanData } from '../../../core/services/student-api.service';
 
 @Component({
   selector: 'app-students-list',
@@ -124,8 +124,24 @@ import { StudentApiService, SelectedSchoolData, SchoolStatistics } from '../../.
               </td>
               <td style="padding:8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">{{ s.StudentOpenEMIS_ID }}</td>
               <td style="padding:8px;">{{ s.EducationGrade }}</td>
-              <td style="padding:8px; color: var(--bah-text-muted);">—</td>
-              <td style="padding:8px; color: var(--bah-text-muted);">—</td>
+              <td style="padding:8px;">
+                @if (loadingScans()) {
+                  <span style="color: var(--bah-text-muted); font-style: italic;">Loading...</span>
+                } @else {
+                  <span [style.color]="getGateInTime(s.StudentOpenEMIS_ID) ? 'var(--bah-success)' : 'var(--bah-text-muted)'">
+                    {{ getGateInTime(s.StudentOpenEMIS_ID) || '—' }}
+                  </span>
+                }
+              </td>
+              <td style="padding:8px;">
+                @if (loadingScans()) {
+                  <span style="color: var(--bah-text-muted); font-style: italic;">Loading...</span>
+                } @else {
+                  <span [style.color]="getGateOutTime(s.StudentOpenEMIS_ID) ? 'var(--bah-warning)' : 'var(--bah-text-muted)'">
+                    {{ getGateOutTime(s.StudentOpenEMIS_ID) || '—' }}
+                  </span>
+                }
+              </td>
               <td style="padding:8px; text-align:right;">
                 <a class="btn-primary"
                    [routerLink]="['/students', s.StudentID]"
@@ -150,6 +166,8 @@ export class StudentsListComponent implements OnInit {
   statistics = signal<SchoolStatistics | null>(null);
   loadingStatistics = signal<boolean>(false);
   selectedStudents = signal<number[]>([]);
+  studentScans = signal<{ [studentId: string]: StudentScanData }>({});
+  loadingScans = signal<boolean>(false);
 
   ngOnInit() {
     // Subscribe to selected school changes
@@ -163,6 +181,7 @@ export class StudentsListComponent implements OnInit {
   private loadStudentsForSchool(school: SelectedSchoolData | null) {
     if (!school) {
       this.students.set([]);
+      this.studentScans.set({});
       return;
     }
 
@@ -172,11 +191,41 @@ export class StudentsListComponent implements OnInit {
         const items = response.items || [];
         this.students.set(items);
         this.loading.set(false);
+
+        // Load scan data after students are loaded
+        this.loadStudentScans(items);
       },
       error: (error) => {
         console.error('Failed to load students for school:', error);
         this.students.set([]);
+        this.studentScans.set({});
         this.loading.set(false);
+      }
+    });
+  }
+
+  private loadStudentScans(students: StudentData[]) {
+    // Extract student IDs (StudentOpenEMIS_ID) that are valid
+    const studentIds = students
+      .map(student => student.StudentOpenEMIS_ID)
+      .filter((id): id is string => !!id);
+
+    if (studentIds.length === 0) {
+      this.studentScans.set({});
+      return;
+    }
+
+    this.loadingScans.set(true);
+    this.api.getStudentScans(studentIds).subscribe({
+      next: (scanData) => {
+        this.studentScans.set(scanData);
+        this.loadingScans.set(false);
+        console.log('Loaded scan data for', Object.keys(scanData).length, 'students');
+      },
+      error: (error) => {
+        console.error('Failed to load student scan data:', error);
+        this.studentScans.set({});
+        this.loadingScans.set(false);
       }
     });
   }
@@ -247,6 +296,18 @@ export class StudentsListComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedStudents.set([]);
+  }
+
+  getGateInTime(studentOpenEmisId?: string): string | null {
+    if (!studentOpenEmisId) return null;
+    const scanData = this.studentScans()[studentOpenEmisId];
+    return scanData?.gateIn || null;
+  }
+
+  getGateOutTime(studentOpenEmisId?: string): string | null {
+    if (!studentOpenEmisId) return null;
+    const scanData = this.studentScans()[studentOpenEmisId];
+    return scanData?.gateOut || null;
   }
 
   // Gender display methods

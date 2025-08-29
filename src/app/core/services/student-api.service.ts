@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { StudentData } from '../models/student-data';
 
 export interface SearchResponse {
@@ -41,6 +42,18 @@ export interface SchoolStatistics {
   maleCount: number;
   femaleCount: number;
   institutionCode: string;
+}
+
+export interface StudentScanData {
+  gateIn?: string;
+  gateOut?: string;
+}
+
+export interface StudentScansResponse {
+  success: boolean;
+  data: { [studentId: string]: StudentScanData };
+  processedCount: number;
+  scansFound: number;
 }
 
 
@@ -97,6 +110,13 @@ export class StudentApiService {
     return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
   }
 
+  private scansBaseUrl(): string {
+    // Configure this at runtime by setting window.STUDENT_SCANS_API_BASE in index.html or via hosting env.
+    const w = globalThis as any;
+    const raw = (w.STUDENT_SCANS_API_BASE as string) || '';
+    return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
+  }
+
   // Resolve scans endpoint path or absolute URL based on runtime window.SCANS_TODAY_PATH
 
   searchStudents(q: string, page = 1, limit = 20): Observable<SearchResponse> {
@@ -133,6 +153,76 @@ export class StudentApiService {
 
   getStudentById(studentId: number): Observable<{ student: StudentData }> {
     return this.http.get<{ student: StudentData }>(`${this.baseUrl()}/students/${studentId}`);
+  }
+
+  /**
+   * Get scan data (gate in/out times) for multiple students
+   * Handles batch processing with max 200 student IDs per request
+   */
+  getStudentScans(studentIds: string[]): Observable<{ [studentId: string]: StudentScanData }> {
+    if (!studentIds || studentIds.length === 0) {
+      return of({});
+    }
+
+    // Split student IDs into chunks of 200
+    const chunks = this.chunkArray(studentIds, 200);
+
+    // If only one chunk, make direct request
+    if (chunks.length === 1) {
+      return this.fetchScanBatch(chunks[0]).pipe(
+        map(response => response.data),
+        catchError(error => {
+          console.error('Error fetching student scans:', error);
+          // Return empty data for all students on error
+          const emptyData: { [studentId: string]: StudentScanData } = {};
+          studentIds.forEach(id => emptyData[id] = {});
+          return of(emptyData);
+        })
+      );
+    }
+
+    // Process multiple chunks concurrently
+    const batchRequests = chunks.map(chunk =>
+      this.fetchScanBatch(chunk).pipe(
+        catchError(error => {
+          console.error('Error fetching scan batch:', error);
+          // Return empty data for this batch on error
+          const emptyData: { [studentId: string]: StudentScanData } = {};
+          chunk.forEach(id => emptyData[id] = {});
+          return of({ success: false, data: emptyData, processedCount: chunk.length, scansFound: 0 });
+        })
+      )
+    );
+
+    return forkJoin(batchRequests).pipe(
+      map(responses => {
+        // Merge all batch responses into single data object
+        const mergedData: { [studentId: string]: StudentScanData } = {};
+        responses.forEach(response => {
+          Object.assign(mergedData, response.data);
+        });
+        return mergedData;
+      })
+    );
+  }
+
+  /**
+   * Fetch scan data for a single batch of student IDs (max 200)
+   */
+  private fetchScanBatch(studentIds: string[]): Observable<StudentScansResponse> {
+    const payload = { studentIds };
+    return this.http.post<StudentScansResponse>(this.scansBaseUrl(), payload);
+  }
+
+  /**
+   * Split array into chunks of specified size
+   */
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
   }
 
 }
