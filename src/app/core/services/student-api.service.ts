@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { StudentData } from '../models/student-data';
 
 export interface SearchResponse {
@@ -104,7 +105,8 @@ export class StudentApiService {
     // Configure this at runtime by setting window.STUDENT_API_BASE in index.html or via hosting env.
     // Example: https://abc123.execute-api.us-east-1.amazonaws.com/prod
     const w = globalThis as any;
-    return (w.STUDENT_API_BASE as string) || '';
+    const raw = (w.STUDENT_API_BASE as string) || '';
+    return raw.replace(/\/+$/, ''); // strip trailing slashes to avoid double slashes when joining paths
   }
 
   searchStudents(q: string, page = 1, limit = 20): Observable<SearchResponse> {
@@ -145,9 +147,40 @@ export class StudentApiService {
 
   // Fetch today's latest Gate In/Out scans for a batch of students (no school filter)
   getTodayScans(studentOpenEmisIds: (string | number)[]): Observable<TodayScansResponse> {
-    const ids = (studentOpenEmisIds || []).filter(Boolean).map(String);
-    const params = new HttpParams()
-      .set('student_ids', ids.join(','));
-    return this.http.get<TodayScansResponse>(`${this.baseUrl()}/scans/today`, { params });
+    const ids = (studentOpenEmisIds || [])
+      .filter((v) => v !== undefined && v !== null)
+      .map((v) => String(v).trim())
+      .filter((v) => v.length > 0);
+
+    if (ids.length === 0) {
+      return of({ items: [] });
+    }
+
+    const base = this.baseUrl();
+    const chunkSize = 200; // reasonable batch size to keep payloads small and parallelize
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      chunks.push(ids.slice(i, i + chunkSize));
+    }
+
+    const requests = chunks.map(part => this.http.post<TodayScansResponse>(`${base}/scans/today`, {
+      student_ids: part
+    }));
+
+    if (requests.length === 1) {
+      return requests[0];
+    }
+
+    return forkJoin(requests).pipe(
+      map(responses => {
+        const merged: TodayScansResponse = { items: [] };
+        for (const r of responses) {
+          if (r?.items?.length) merged.items.push(...r.items);
+          if (!merged.timezone && r?.timezone) merged.timezone = r.timezone;
+        }
+        return merged;
+      })
+    );
   }
 }
