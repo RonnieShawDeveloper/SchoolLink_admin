@@ -298,6 +298,49 @@ export class StudentsListComponent implements OnInit {
     this.selectedStudents.set([]);
   }
 
+  private convertUtcTimeStringToLocal(utcTimeString: string): string {
+    try {
+      // Parse the UTC time string (format: "HH:MM AM/PM")
+      const timeMatch = utcTimeString.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+      if (!timeMatch) {
+        console.warn('Invalid time format:', utcTimeString);
+        return utcTimeString;
+      }
+
+      const [, hourStr, minuteStr, ampm] = timeMatch;
+      let hours = parseInt(hourStr, 10);
+      const minutes = parseInt(minuteStr, 10);
+
+      // Convert to 24-hour format
+      if (ampm.toUpperCase() === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (ampm.toUpperCase() === 'AM' && hours === 12) {
+        hours = 0;
+      }
+
+      // Create a UTC date object with today's date and the parsed time
+      const today = new Date();
+      const utcDate = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        hours,
+        minutes,
+        0
+      ));
+
+      // Convert to local time and format back to 12-hour format
+      return utcDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error converting UTC time to local:', error);
+      return utcTimeString; // Fallback to original string if conversion fails
+    }
+  }
+
   getGateInTime(studentOpenEmisId?: string): string | null {
     if (!studentOpenEmisId) return null;
     const scanData = this.studentScans()[studentOpenEmisId];
@@ -305,22 +348,7 @@ export class StudentsListComponent implements OnInit {
 
     if (!utcTimeString) return null;
 
-    // Convert UTC timestamp to local timezone
-    try {
-      const utcDate = new Date(utcTimeString);
-      return utcDate.toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      });
-    } catch (error) {
-      console.error('Error converting gate in time:', error);
-      return utcTimeString; // Fallback to original string if conversion fails
-    }
+    return this.convertUtcTimeStringToLocal(utcTimeString);
   }
 
   getGateOutTime(studentOpenEmisId?: string): string | null {
@@ -330,22 +358,7 @@ export class StudentsListComponent implements OnInit {
 
     if (!utcTimeString) return null;
 
-    // Convert UTC timestamp to local timezone
-    try {
-      const utcDate = new Date(utcTimeString);
-      return utcDate.toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      });
-    } catch (error) {
-      console.error('Error converting gate out time:', error);
-      return utcTimeString; // Fallback to original string if conversion fails
-    }
+    return this.convertUtcTimeStringToLocal(utcTimeString);
   }
 
   // Gender display methods
