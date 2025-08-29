@@ -42,6 +42,7 @@ function isStudentByIdRoute(path: string) { return path.match(/\/students\/\d+$/
 function isUpdateRoute(path: string) { return path.endsWith('/students/update'); }
 function isPhotoUploadRoute(path: string) { return path.endsWith('/photos/presigned-url'); }
 function isScansTodayRoute(path: string) { return path.endsWith('/scans/today'); }
+function isHealthRoute(path: string) { return path.endsWith('/health'); }
 
 export const handler = async (event: any) => {
   try {
@@ -54,6 +55,11 @@ export const handler = async (event: any) => {
     const qs = event.queryStringParameters || {};
     const q = (qs.q || '').trim();
     const { limit, page, offset } = parsePaging(qs.limit, qs.page);
+
+    // Lightweight health check that does not require DB
+    if (isHealthRoute(route)) {
+      return resp(200, { status: 'ok', time: new Date().toISOString() });
+    }
 
     const pool = await getPool();
 
@@ -319,7 +325,7 @@ export const handler = async (event: any) => {
           s.student_id,
           MAX(CASE WHEN s.mode_id = 1 THEN s.scanned_at END) AS latestInAt,
           MAX(CASE WHEN s.mode_id = 2 THEN s.scanned_at END) AS latestOutAt
-        FROM scans s
+        FROM SchoolLink.scans s
         WHERE s.mode_id IN (1,2)
           AND s.student_id IN (?)
           AND DATE(s.scanned_at) = UTC_DATE()

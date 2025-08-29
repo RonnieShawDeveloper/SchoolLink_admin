@@ -7,7 +7,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:scans": "node scripts/test-scans-endpoint.js"
+    "wait:deploy": "node scripts/wait-for-deploy.js",
+    "test:scans": "node scripts/test-scans-endpoint.js",
+    "test:scans:live": "node scripts/wait-for-deploy.js && node scripts/test-scans-endpoint.js"
   },
   "prettier": {
     "printWidth": 100,
