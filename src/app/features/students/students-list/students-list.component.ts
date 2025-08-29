@@ -174,7 +174,7 @@ export class StudentsListComponent implements OnInit {
         const items = response.items || [];
         this.students.set(items);
         this.loading.set(false);
-        this.loadScansForStudents(school, items);
+        this.loadScansForStudents(items);
       },
       error: (error) => {
         console.error('Failed to load students for school:', error);
@@ -185,13 +185,13 @@ export class StudentsListComponent implements OnInit {
     });
   }
 
-  private loadScansForStudents(school: SelectedSchoolData, students: StudentData[]): void {
+  private loadScansForStudents(students: StudentData[]): void {
     const ids = (students || []).map(s => s.StudentOpenEMIS_ID).filter((v): v is string => !!v);
     if (ids.length === 0) {
       this.gateTimes.set({});
       return;
     }
-    this.api.getTodayScansBySchool(school.InstitutionCode, ids).subscribe({
+    this.api.getTodayScans(ids).subscribe({
       next: (res) => {
         const map: Record<string, { in?: string; out?: string }> = {};
         const tz = (res as any)?.timezone as string | undefined;

@@ -143,11 +143,10 @@ export class StudentApiService {
     return this.http.get<{ student: StudentData }>(`${this.baseUrl()}/students/${studentId}`);
   }
 
-  // Fetch today's latest Gate In/Out scans for a batch of students in a school
-  getTodayScansBySchool(institutionCode: string, studentOpenEmisIds: (string | number)[]): Observable<TodayScansResponse> {
+  // Fetch today's latest Gate In/Out scans for a batch of students (no school filter)
+  getTodayScans(studentOpenEmisIds: (string | number)[]): Observable<TodayScansResponse> {
     const ids = (studentOpenEmisIds || []).filter(Boolean).map(String);
     const params = new HttpParams()
-      .set('institutionCode', institutionCode)
       .set('student_ids', ids.join(','));
     return this.http.get<TodayScansResponse>(`${this.baseUrl()}/scans/today`, { params });
   }
